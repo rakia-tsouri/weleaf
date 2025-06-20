@@ -1,0 +1,44 @@
+import 'package:flutter/material.dart';
+
+/// Design Colors
+const Color PRIMARY_BLUE_COLOR = Color(0xff102457);
+const Color APP_PRIMARY_COLOR = Color(0xff102457);
+const Color APP_SECONDARY_COLOR = Color(0xffE4EDF9);
+const Color PRIMARY_YELLOW_COLOR = Color(0xFFFFA800);
+//bottom bar
+const Color BOTTOM_BAR_BACKGROUND = Color(0xFFE7F0FD);
+const Color WHITE_COLOR = Colors.white;
+const Color PLACEHOLDER_TEXT_COLOR = Color(0xff646464);
+const Color APP_BACKGROUND_COLOR = Color(0xffF0F3F7);
+const Color TEXT_FIELD_ICON_COLOR = Color(0xffDFE0EB);
+
+const Color PRIMARY_SKY_BLUE_COLOR = Color(0xff4185FB);
+const Color TEXT_INPUT_COLOR = Color(0xff102457);
+const Color TEXT_FIELD_DEFAULT_BACKGROUND_COLOR = Colors.white;
+const Color TEXT_FIELD_REQUIRED_COLOR = Color.fromARGB(255, 204, 57, 21);
+const Color CHECKBOX_BACKGROUND_COLOR = Color(0xFFECF0F3);
+Color RED_COLOR = Color.fromARGB((0.85 * 255).round(), 234, 0, 0);
+const Color CIRCULAR_PROGRESS_VALUE_COLOR = Color(0xFFFFA800);
+const Color FADED_GREY_COLOR = Color(0xffC1C8D8);
+
+// offer details
+const Color OFFER_DETAILS_LOADING_TEXT_COLOR = Colors.white;
+const Color OFFER_DETAILS_ERROR_TEXT_COLOR = Colors.white;
+const Color OFFER_DETAILS_REF_OFFER_TITLE_COLOR = Colors.white;
+const Color OFFER_DETAILS_REF_OFFER_VALUE_COLOR = Colors.white;
+const Color OFFER_DETAILS_CREATION_DATE_TITLE_COLOR = Colors.white;
+Color OFFER_DETAILS_CREATION_DATE_BACKGROUND_COLOR =
+    Colors.white.withOpacity(0.9);
+Color OFFER_DETAILS_CREATION_DATE_VALUE_COLOR = Colors.orange.withOpacity(0.7);
+const Color OFFER_DETAILS_FINANCED_AMOUNT__COLOR = Colors.white;
+const Color OFFER_DETAILS_ASSET_BRAND_RANGE_COLOR = Colors.white;
+const Color OFFER_DETAILS_DETAILS_CONTAINER_BACKGROUND_COLOR = Colors.white;
+const Color OFFER_DETAILS_FIRST_PAYMENT_COLOR = PRIMARY_YELLOW_COLOR;
+const Color OFFER_DETAILS_ACTIVITY_TYPE_COLOR = PRIMARY_YELLOW_COLOR;
+const Color OFFER_DETAILS_MORE_DETAILS_SECTION_BACKGROUND_COLOR =
+    Color(0xFFf9f8fd);
+const Color OFFER_DETAILS_DETAIL_ITEM_BACKGROUND_COLOR = Colors.white;
+
+const Color OFFER_DETAILS_DETAIL_ITEM_TITLE_COLOR = PRIMARY_YELLOW_COLOR;
+const Color OFFER_DETAILS_DETAIL_ITEM_VALUE_COLOR = Colors.black;
+const Color SLIDER_INAVTIVE_COLOR = Color(0xffDADADA);
