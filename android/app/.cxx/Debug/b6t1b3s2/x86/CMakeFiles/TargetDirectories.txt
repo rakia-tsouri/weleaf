@@ -1,0 +1,2 @@
+C:/Users/LENOVO/Downloads/optorg-demo-mobile-dev/optorg-demo-mobile-dev/android/app/.cxx/Debug/b6t1b3s2/x86/CMakeFiles/edit_cache.dir
+C:/Users/LENOVO/Downloads/optorg-demo-mobile-dev/optorg-demo-mobile-dev/android/app/.cxx/Debug/b6t1b3s2/x86/CMakeFiles/rebuild_cache.dir
