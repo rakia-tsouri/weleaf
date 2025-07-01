@@ -8,6 +8,11 @@ import 'package:optorg_mobile/utils/shared_prefs.dart';
 import 'package:optorg_mobile/widgets/app_dialog.dart';
 import 'package:optorg_mobile/widgets/custom_popup_bottom_sheet.dart';
 import 'catalogue_page.dart';
+import 'listContrats.dart';
+import 'FacturesPayees.dart';
+import 'FacturesImpayees.dart';
+import 'calculatrice.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -20,16 +25,20 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const BienvenuePage(),
-    const ProposalsListScreen(),
     const CatalogPage(),
-
-
+    const ProposalsListScreen(),
+    const ListContratsPage(),  // Add this line
+    FacturesPage(), // Ajoutez cette ligne
+    CalculatricePage(),
   ];
 
   final List<NavigationItem> _navigationItems = [
-    NavigationItem(icon: Icons.home, label: 'Bienvenue', color: Colors.blue),
-    NavigationItem(icon: Icons.description, label: 'Proposition', color: Colors.indigo),
-    NavigationItem(icon: Icons.description, label: 'catalogue', color: Colors.indigo),
+    NavigationItem(icon: Icons.home, label: 'Acceuil', color: Colors.blue),
+    NavigationItem(icon: Icons.grid_view, label: 'Catalogue', color: Colors.indigo),
+    NavigationItem(icon: Icons.description, label: 'Propositions', color: Colors.indigo),
+    NavigationItem(icon: Icons.assignment, label: 'Contrats', color: Colors.indigo),
+    NavigationItem(icon: Icons.receipt_long, label: 'Factures', color: Colors.indigo),
+    NavigationItem(icon: Icons.calculate, label: 'Calculatrice', color: Colors.indigo),
   ];
 
   @override
@@ -82,7 +91,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Système de gestion',
+                    'Votre partenaire de leasing',
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
@@ -165,6 +174,47 @@ class _HomePageState extends State<HomePage> {
       ),
       isScrollControlled: true,
       isDismissible: true,
+    );
+  }
+}
+
+class FacturesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF2563EB),
+        title: Text('Factures', style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FacturesPayeesPage()),
+                );
+              },
+              child: Text('Factures Payées'),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FacturesImpayeesPage(),
+                  ),
+                );
+              },
+              child: Text('Factures Impayées'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
