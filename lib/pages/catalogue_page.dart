@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:optorg_mobile/data/repositories/catalogue_repository.dart';
 import 'package:optorg_mobile/utils/app_data_store.dart';
 
@@ -11,7 +13,10 @@ class CatalogItem {
   final String category;
   final int price;
   final String description;
+  final String? assetPictureUrl; // nom du fichier image, ex: "S450.jpg"
   final Map<String, dynamic> specifications;
+
+  Uint8List? imageBytes; // image décodée base64
 
   CatalogItem({
     required this.id,
@@ -20,16 +25,19 @@ class CatalogItem {
     required this.price,
     required this.description,
     required this.specifications,
+    this.assetPictureUrl,
+    this.imageBytes,
   });
 
   factory CatalogItem.fromJson(Map<String, dynamic> json) {
     return CatalogItem(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? 'Nom inconnu',
-      category: json['category']?.toString() ?? 'Autre',
-      price: int.tryParse(json['price']?.toString() ?? '0') ?? 0,
-      description: json['description']?.toString() ?? '',
-      specifications: Map<String, dynamic>.from(json['specifications'] ?? {}),
+      id: json['catalogid']?.toString() ?? '',
+      name: json['assetlabel']?.toString() ?? 'Nom inconnu',
+      category: json['assetcategorylabel']?.toString() ?? 'Autre',
+      price: (json['assetnetamount'] ?? 0).toInt(),
+      description: json['assetdescription']?.toString() ?? '',
+      specifications: {},
+      assetPictureUrl: json['assetpictureurl']?.toString(),
     );
   }
 }
@@ -62,12 +70,35 @@ class _CatalogPageState extends State<CatalogPage> {
     _loadCatalogItems();
   }
 
+  Future<Uint8List?> fetchImageBase64(String token, String imageName) async {
+    try {
+      final dio = Dio();
+      dio.options.headers['Authorization'] = 'Bearer $token';
+
+      final response = await dio.post(
+        'https://demo-backend-utina.teamwill-digital.com/document-service/api/getfile/$imageName',
+      );
+
+
+      if (response.statusCode == 200 && response.data != null) {
+        String? base64String = response.data['description'];
+        if (base64String != null && base64String.isNotEmpty) {
+          if (base64String.startsWith('data:image')) {
+            base64String = base64String.split(',').last;
+          }
+          return base64Decode(base64String);
+        }
+      }
+    } catch (e) {
+      print('Erreur récupération image $imageName: $e');
+    }
+    return null;
+  }
+
   Future<void> _loadCatalogItems() async {
     try {
       final token = await _appDataStore.getToken();
-      if (token == null) {
-        throw Exception('Token non disponible');
-      }
+      if (token == null) throw Exception('Token non disponible');
 
       setState(() {
         isLoading = true;
@@ -75,6 +106,14 @@ class _CatalogPageState extends State<CatalogPage> {
       });
 
       final items = await _catalogRepository.fetchCatalogItems();
+
+      // Charger images Base64 pour chaque item avec image
+      for (var item in items) {
+        if (item.assetPictureUrl != null && item.assetPictureUrl!.isNotEmpty) {
+          final imageBytes = await fetchImageBase64(token, item.assetPictureUrl!);
+          item.imageBytes = imageBytes;
+        }
+      }
 
       setState(() {
         catalogItems = items;
@@ -92,10 +131,13 @@ class _CatalogPageState extends State<CatalogPage> {
   IconData getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'véhicule':
+      case 'vehicle':
         return Icons.directions_car;
       case 'informatique':
+      case 'it':
         return Icons.computer;
       case 'bureau':
+      case 'office':
         return Icons.print;
       default:
         return Icons.image;
@@ -139,14 +181,12 @@ class _CatalogPageState extends State<CatalogPage> {
   List<CatalogItem> getFilteredItems() {
     var items = catalogItems;
 
-    // Filtre par catégorie
     if (selectedCategory != 'all') {
-      items = items.where((item) =>
-          item.category.toLowerCase().contains(selectedCategory)
-      ).toList();
+      items = items
+          .where((item) => item.category.toLowerCase().contains(selectedCategory))
+          .toList();
     }
 
-    // Tri
     switch (selectedSort) {
       case 'price':
         items.sort((a, b) => a.price.compareTo(b.price));
@@ -170,42 +210,19 @@ class _CatalogPageState extends State<CatalogPage> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2563EB),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Catalogue',
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
-        ),
-        centerTitle: false,
-        actions: [
-          if (isLoading)
-            const Padding(
-              padding: EdgeInsets.only(right: 16),
-              child: Center(child: CircularProgressIndicator(color: Colors.white)),
-            ),
-        ],
-      ),
       body: _buildCatalogBody(),
     );
   }
 
   Widget _buildCatalogBody() {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    if (isLoading) return const Center(child: CircularProgressIndicator());
 
     if (errorMessage != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(errorMessage!),
+            Text(errorMessage!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loadCatalogItems,
@@ -218,137 +235,126 @@ class _CatalogPageState extends State<CatalogPage> {
 
     final filteredItems = getFilteredItems();
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Header section
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Produits disponibles',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Catalogue des produits',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0D1B2A),
+                    ),
                   ),
-                ),
-                Chip(
-                  label: Text('${filteredItems.length} produits'),
-                ),
-              ],
-            ),
-          ),
-
-          // Filters
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Category filter
-                Expanded(
-                  child: DropdownButtonFormField<String>(
+                  Chip(
+                    backgroundColor: Colors.grey.shade200,
+                    label: Text('${filteredItems.length} items'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _buildDropdown(
+                    label: 'Catégorie',
                     value: selectedCategory,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'all',
-                        child: Text('Toutes catégories'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'vehicle',
-                        child: Text('Véhicules'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'it',
-                        child: Text('Informatique'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'office',
-                        child: Text('Bureau'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategory = value ?? 'all';
-                      });
+                    items: const {
+                      'all': 'Toutes catégories',
+                      'vehicle': 'Véhicules',
+                      'it': 'Informatique',
+                      'office': 'Bureau',
                     },
+                    onChanged: (val) => setState(() => selectedCategory = val),
                   ),
-                ),
-                const SizedBox(width: 16),
-                // Sort filter
-                Expanded(
-                  child: DropdownButtonFormField<String>(
+                  _buildDropdown(
+                    label: 'Trier par',
                     value: selectedSort,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'price',
-                        child: Text('Prix croissant'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'price-desc',
-                        child: Text('Prix décroissant'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'name',
-                        child: Text('Nom A-Z'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedSort = value ?? 'price';
-                      });
+                    items: const {
+                      'price': 'Prix croissant',
+                      'price-desc': 'Prix décroissant',
+                      'name': 'Nom A-Z',
                     },
+                    onChanged: (val) => setState(() => selectedSort = val),
                   ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (filteredItems.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Text(
+                      'Aucun produit trouvé.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ),
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filteredItems.length,
+                  itemBuilder: (context, index) {
+                    return _buildProductCard(filteredItems[index]);
+                  },
                 ),
-              ],
-            ),
+            ],
           ),
+        );
+      },
+    );
+  }
 
-          const SizedBox(height: 16),
-
-          // Product list
-          if (filteredItems.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Text('Aucun produit trouvé'),
-            )
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: filteredItems.length,
-              itemBuilder: (context, index) {
-                final item = filteredItems[index];
-                return _buildProductCard(item);
-              },
-            ),
-        ],
+  Widget _buildDropdown({
+    required String label,
+    required String value,
+    required Map<String, String> items,
+    required ValueChanged<String> onChanged,
+  }) {
+    return SizedBox(
+      width: 180,
+      child: DropdownButtonFormField<String>(
+        value: value,
+        onChanged: (val) {
+          if (val != null) onChanged(val);
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(
+            color: Color(0xFF1E3A8A),
+            fontWeight: FontWeight.w600,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFF1E3A8A), width: 2),
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF1E3A8A)),
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: 14,
+        ),
+        items: items.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key,
+            child: Text(entry.value),
+          );
+        }).toList(),
       ),
     );
   }
@@ -356,136 +362,104 @@ class _CatalogPageState extends State<CatalogPage> {
   Widget _buildProductCard(CatalogItem item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category tag
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                item.category,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D1B2A),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              item.category.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
           ),
-
-          // Image placeholder
+          const SizedBox(height: 12),
           Container(
-            height: 200,
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            height: 270,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color:Color.fromRGBO(0,61,112,1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
+            alignment: Alignment.center,
+            child: item.imageBytes != null
+                ? Image.memory(
+              item.imageBytes!,
+              fit: BoxFit.contain,
+            )
+                : Icon(
               getCategoryIcon(item.category),
               size: 60,
-              color: Colors.grey[600],
+              color: Colors.grey[500],
             ),
           ),
-
-          // Product info
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  item.description,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '${formatPrice(item.price)}€',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2563EB),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 12),
+          Text(
+            item.name,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF0D1B2A),
             ),
           ),
-
-          // Specifications
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                for (var entry in item.specifications.entries)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${entry.key}: ',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        Text(entry.value.toString()),
-                      ],
-                    ),
-                  ),
-              ],
+          const SizedBox(height: 6),
+          Text(
+            item.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 14,
             ),
           ),
-
-          // Simulation button
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black87,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+          const SizedBox(height: 12),
+          Text(
+            '${formatPrice(item.price)} €',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2563EB),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.calculate, size: 18),
+              label: const Text('Simuler le leasing'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D1B2A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                icon: const Icon(Icons.calculate),
-                label: const Text('SIMULER LE LEASING'),
-                onPressed: () {
-                  setState(() {
-                    selectedItem = item;
-                    showSimulation = true;
-                  });
-                },
               ),
+              onPressed: () {
+                setState(() {
+                  selectedItem = item;
+                  showSimulation = true;
+                });
+              },
             ),
           ),
         ],
@@ -499,7 +473,7 @@ class _CatalogPageState extends State<CatalogPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2563EB),
+        backgroundColor: const Color(0xFF003D70),
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -517,7 +491,6 @@ class _CatalogPageState extends State<CatalogPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Product card
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -536,191 +509,142 @@ class _CatalogPageState extends State<CatalogPage> {
                         color: Colors.grey[600],
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            selectedItem!.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          Text(
-                            '${formatPrice(selectedItem!.price)}€',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                              color: Color(0xFF2563EB),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        selectedItem!.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // Simulation parameters
+            const SizedBox(height: 20),
+            _buildSlider(
+              label: 'Durée (mois)',
+              value: duration,
+              min: 12,
+              max: 60,
+              divisions: 48,
+              onChanged: (val) => setState(() => duration = val),
+              displayValue: '${duration.round()}',
+            ),
+            const SizedBox(height: 20),
+            _buildSlider(
+              label: 'Apport initial (€)',
+              value: downPayment,
+              min: 0,
+              max: selectedItem!.price.toDouble(),
+              divisions: selectedItem!.price,
+              onChanged: (val) => setState(() => downPayment = val),
+              displayValue: '${downPayment.round()} €',
+            ),
+            const SizedBox(height: 20),
+            _buildSlider(
+              label: 'Valeur résiduelle (%)',
+              value: residualValue,
+              min: 0,
+              max: 100,
+              divisions: 100,
+              onChanged: (val) => setState(() => residualValue = val),
+              displayValue: '${residualValue.round()} %',
+            ),
+            const SizedBox(height: 40),
             Card(
+              color: const Color(0xFF2563EB),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Paramètres du leasing',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Durée du contrat:'),
-                    Slider(
-                      value: duration,
-                      min: 12,
-                      max: 60,
-                      divisions: (60 - 12) ~/ 6,
-                      label: '${duration.toInt()} mois',
-                      onChanged: (value) {
-                        setState(() => duration = value);
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Apport initial (€)'),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: '0',
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          downPayment = double.tryParse(value) ?? 0;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Valeur résiduelle:'),
-                    Slider(
-                      value: residualValue,
-                      min: 0,
-                      max: 50,
-                      divisions: 10,
-                      label: '${residualValue.toInt()}%',
-                      onChanged: (value) {
-                        setState(() => residualValue = value);
-                      },
-                    ),
+                    _buildResultRow('Paiement mensuel', '${simulation['monthlyPayment']} €'),
+                    const SizedBox(height: 12),
+                    _buildResultRow('Coût total', '${simulation['totalCost']} €'),
+                    const SizedBox(height: 12),
+                    _buildResultRow('Intérêts totaux', '${simulation['totalInterest']} €'),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // Results
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.calculate, color: Color(0xFF2563EB)),
-                        SizedBox(width: 8),
-                        Text(
-                          'Résultats',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2563EB).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              children: [
-                                const Text('Mensualité'),
-                                Text(
-                                  '${simulation['monthlyPayment']}€',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 24,
-                                    color: Color(0xFF2563EB),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              children: [
-                                const Text('Coût total'),
-                                Text(
-                                  '${simulation['totalCost']}€',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 24,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: () {
-                          // TODO: Implémenter la demande d'offre
-                        },
-                        child: const Text(
-                          'DEMANDER UNE OFFRE',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D1B2A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
+              onPressed: () {
+                setState(() => showSimulation = false);
+              },
+              child: const Text('Retour au catalogue'),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSlider({
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required ValueChanged<double> onChanged,
+    required String displayValue,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label : $displayValue',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF0D1B2A),
+          ),
+        ),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: divisions,
+          label: displayValue,
+          onChanged: onChanged,
+          activeColor: const Color(0xFF2563EB),
+          inactiveColor: Colors.grey[300],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

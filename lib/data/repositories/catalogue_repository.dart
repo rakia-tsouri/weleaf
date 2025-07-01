@@ -27,7 +27,7 @@ class CatalogRepository extends AppRepository {
       );
 
 
-      List<dynamic> rawList = response.data;
+      List<dynamic> rawList = response.data['list'];
       return rawList.map((json) => CatalogItem.fromJson(json)).toList();
     } catch (e) {
       print("Erreur API catalogue: $e");
