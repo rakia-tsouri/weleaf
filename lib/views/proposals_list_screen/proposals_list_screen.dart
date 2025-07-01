@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import 'proposals_list_screen_vm.dart';
 import 'proposal_list_screen_item.dart';
 import 'package:optorg_mobile/data/models/api_response.dart';
-
+import 'package:optorg_mobile/pages/propositions.dart';
 
 class ProposalsListScreen extends StatefulWidget {
   const ProposalsListScreen({super.key});
@@ -55,7 +55,6 @@ class _ProposalsListScreenState extends State<ProposalsListScreen> {
       screenContent: Container(
         child: _buildProposalsListFutureBuilder(),
       ),
-
     );
   }
 
@@ -205,8 +204,25 @@ class _ProposalsListScreenState extends State<ProposalsListScreen> {
           TextView(text: "Aucune proposition trouvée"),
           SizedBox(height: PADDING_16.heightResponsive()),
           ElevatedButton(
-            onPressed: () {},
-            child: Text('Créer une nouvelle proposition'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PropositionsPage(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PRIMARY_BLUE_COLOR,
+              padding: EdgeInsets.symmetric(
+                horizontal: PADDING_16.widthResponsive(),
+                vertical: PADDING_12.heightResponsive(),
+              ),
+            ),
+            child: Text(
+              'Créer une nouvelle proposition',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
