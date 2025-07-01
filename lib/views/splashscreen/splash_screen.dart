@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (token != null) {
       //loginVM.connectedUser = await SplashScreenVM().getUserData();
       // navigate direct to car home screen
-      AppNavigation.goToProposalsListScreen(clearAllStack: true);
+      AppNavigation.goToBienvenue(clearAllStack: true);
     } else {
       Navigator.of(context).pushNamedAndRemoveUntil(
           ROUTE_TO_LOGIN_SCREEN, (route) => false,

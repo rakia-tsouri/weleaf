@@ -17,6 +17,7 @@ const double PADDING_7 = 7;
 const double PADDING_8 = 8;
 const double PADDING_9 = 9;
 const double PADDING_10 = 10;
+const double PADDING_12 = 12;
 const double PADDING_13 = 13;
 const double PADDING_15 = 15;
 const double PADDING_16 = 16;

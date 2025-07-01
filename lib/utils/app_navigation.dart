@@ -4,7 +4,7 @@ import 'package:optorg_mobile/views/calculate_screen/calculate_screen.dart';
 import 'package:optorg_mobile/views/my_account_screen/my_account_screen.dart';
 import 'package:optorg_mobile/views/proposals_list_screen/proposal_details/proposal_details_screen.dart';
 import 'package:optorg_mobile/views/proposals_list_screen/proposals_list_screen.dart';
-
+import 'package:optorg_mobile/pages/home_page.dart';
 class AppNavigation {
   static final GlobalKey<NavigatorState> navigatorStateKey = GlobalKey();
 
@@ -29,6 +29,12 @@ class AppNavigation {
   static goToCalculateScreen(
       {bool clearAllStack = false, bool replace = false}) {
     _goTo(const CalculateScreen(), ROUTE_TO_CALCULATE_SCREEN,
+        replace: replace, clearAllStack: clearAllStack);
+  }
+
+  static goToBienvenue(
+      {bool clearAllStack = false, bool replace = false}) {
+      _goTo(const HomePage(), ROUTE_TO_BIENVENUE,
         replace: replace, clearAllStack: clearAllStack);
   }
 

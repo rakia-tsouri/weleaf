@@ -245,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _displayErrorMessage();
     } else {
       Navigator.pop(context);
-      AppNavigation.goToProposalsListScreen(clearAllStack: true);
+      AppNavigation.goToBienvenue(clearAllStack: true);
     }
   }
 
