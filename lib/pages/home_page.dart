@@ -1,20 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'bienvenue_page.dart';
-import 'tableau_bord_page.dart';
-import 'workflow_page.dart';
-import 'configuration_page.dart';
-import 'tiers_page.dart';
 import 'package:optorg_mobile/views/proposals_list_screen/proposals_list_screen.dart';
-import 'dossier_etude_page.dart';
-import 'bon_commande_page.dart';
-
 import 'package:optorg_mobile/constants/routes.dart';
 import 'package:optorg_mobile/utils/app_data_store.dart';
 import 'package:optorg_mobile/utils/shared_prefs.dart';
 import 'package:optorg_mobile/widgets/app_dialog.dart';
 import 'package:optorg_mobile/widgets/custom_popup_bottom_sheet.dart';
-
+import 'catalogue_page.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -27,24 +20,16 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const BienvenuePage(),
-    const TableauBordPage(),
-    const WorkflowPage(),
-    const ConfigurationPage(),
-    const TiersPage(),
     const ProposalsListScreen(),
-    const DossierEtudePage(),
-    const BonCommandePage(),
+    const CatalogPage(),
+
+
   ];
 
   final List<NavigationItem> _navigationItems = [
     NavigationItem(icon: Icons.home, label: 'Bienvenue', color: Colors.blue),
-    NavigationItem(icon: Icons.dashboard, label: 'Tableau de bord', color: Colors.green),
-    NavigationItem(icon: Icons.work, label: 'Workflow', color: Colors.orange),
-    NavigationItem(icon: Icons.settings, label: 'Configuration', color: Colors.purple),
-    NavigationItem(icon: Icons.people, label: 'Tiers', color: Colors.teal),
     NavigationItem(icon: Icons.description, label: 'Proposition', color: Colors.indigo),
-    NavigationItem(icon: Icons.folder, label: 'Dossier d\'étude', color: Colors.red),
-    NavigationItem(icon: Icons.shopping_cart, label: 'Bon de commande', color: Colors.brown),
+    NavigationItem(icon: Icons.description, label: 'catalogue', color: Colors.indigo),
   ];
 
   @override
@@ -86,18 +71,14 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF003D70)),
+              decoration: BoxDecoration(color:Color(0xFF2563EB)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.business, size: 30, color: Color(0xFF061532)),
-                  ),
+
                   SizedBox(height: 10),
                   Text(
-                    'MG Leasing',
+                    'Weleaf',
                     style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   Text(
