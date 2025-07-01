@@ -1,5 +1,180 @@
 import 'package:flutter/material.dart';
+import 'package:optorg_mobile/widgets/nos_produits_et_stats.dart';
+// Ton widget CatalogueCarousel
+class CatalogueCarousel extends StatefulWidget {
+  @override
+  _CatalogueCarouselState createState() => _CatalogueCarouselState();
+}
 
+class _CatalogueCarouselState extends State<CatalogueCarousel> {
+  PageController _pageController = PageController(viewportFraction: 0.85);
+  int _currentPage = 0;
+
+  final List<Map<String, String>> catalogueItems = [
+    {
+      'image': 'assets/images/produit1.jpg',
+      'title': 'Véhicule Premium',
+      'subtitle': 'À partir de 25 000€',
+    },
+    {
+      'image': 'assets/images/produit2.jpg',
+      'title': 'Équipement Industriel',
+      'subtitle': 'À partir de 15 000€',
+    },
+    {
+      'image': 'assets/images/produit3.jpg',
+      'title': 'Matériel Informatique',
+      'subtitle': 'À partir de 5 000€',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Titre section
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Nos Produits',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Action voir tout (à personnaliser)
+                  },
+                  child: Text(
+                    'Voir tout',
+                    style: TextStyle(
+                      color: Color(0xFF2563EB),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16),
+          Container(
+            height: 180,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) => setState(() => _currentPage = index),
+              itemCount: catalogueItems.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Container(
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.image,
+                            size: 50,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                        // Image.asset(catalogueItems[index]['image']!, fit: BoxFit.cover), // décommente si tu as les images
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.6),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 16,
+                          left: 16,
+                          right: 16,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                catalogueItems[index]['title']!,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                catalogueItems[index]['subtitle']!,
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              catalogueItems.length,
+                  (index) => AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                margin: EdgeInsets.symmetric(horizontal: 4),
+                width: _currentPage == index ? 24 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? Color(0xFF2563EB)
+                      : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+}
+
+// Page de bienvenue complète
 class BienvenuePage extends StatelessWidget {
   const BienvenuePage({super.key});
 
@@ -7,93 +182,19 @@ class BienvenuePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header de bienvenue
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF003D70), Color(0xFF003D70)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bienvenue sur MG Leasing',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Votre plateforme de gestion de leasing complète',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
+
+
+
+
+            // **Ici on intègre le widget Nos Produits**
+            NosProduitsEtStats(),
             const SizedBox(height: 24),
-            
-            // Statistiques rapides
-            const Text(
-              'Aperçu rapide',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildStatCard(
-                  'Contrats actifs',
-                  '156',
-                  Icons.description,
-                  Colors.green,
-                ),
-                _buildStatCard(
-                  'En attente',
-                  '23',
-                  Icons.pending,
-                  Colors.orange,
-                ),
-                _buildStatCard(
-                  'Factures',
-                  '89',
-                  Icons.receipt,
-                  Colors.blue,
-                ),
-                _buildStatCard(
-                  'Tâches',
-                  '12',
-                  Icons.task,
-                  Colors.purple,
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 24),
-            
+
+
             // Actions rapides
             const Text(
               'Actions rapides',
@@ -102,8 +203,9 @@ class BienvenuePage extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 16),
-            
+
             Column(
               children: [
                 _buildActionTile(
@@ -111,28 +213,22 @@ class BienvenuePage extends StatelessWidget {
                   'Créer un nouveau contrat de leasing',
                   Icons.add_circle,
                   Colors.green,
-                  () {},
+                      () {},
                 ),
-                _buildActionTile(
-                  'Gérer les tiers',
-                  'Ajouter ou modifier les informations des tiers',
-                  Icons.people,
-                  Colors.blue,
-                  () {},
-                ),
+
                 _buildActionTile(
                   'Voir les tâches',
                   'Consulter les tâches en cours',
                   Icons.checklist,
                   Colors.orange,
-                  () {},
+                      () {},
                 ),
                 _buildActionTile(
                   'Rapports',
                   'Générer des rapports et analyses',
                   Icons.analytics,
                   Colors.purple,
-                  () {},
+                      () {},
                 ),
               ],
             ),
@@ -142,7 +238,8 @@ class BienvenuePage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -178,7 +275,8 @@ class BienvenuePage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionTile(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionTile(
+      String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
