@@ -7,16 +7,39 @@ import 'package:dio/dio.dart';
 import 'package:optorg_mobile/data/repositories/catalogue_repository.dart';
 import 'package:optorg_mobile/utils/app_data_store.dart';
 
+class AssetService {
+  final String servcode;
+  final String servlabel;
+  final double servpercentage;
+  final double servfixedamount;
+
+  AssetService({
+    required this.servcode,
+    required this.servlabel,
+    required this.servpercentage,
+    required this.servfixedamount,
+  });
+
+  factory AssetService.fromJson(Map<String, dynamic> json) {
+    return AssetService(
+      servcode: json['servcode'] ?? '',
+      servlabel: json['servlabel'] ?? '',
+      servpercentage: (json['servpercentage'] ?? 0).toDouble(),
+      servfixedamount: (json['servfixedamount'] ?? 0).toDouble(),
+    );
+  }
+}
+
 class CatalogItem {
   final String id;
   final String name;
   final String category;
   final int price;
   final String description;
-  final String? assetPictureUrl; // nom du fichier image, ex: "S450.jpg"
+  final String? assetPictureUrl;
   final Map<String, dynamic> specifications;
-
-  Uint8List? imageBytes; // image décodée base64
+  Uint8List? imageBytes;
+  final List<AssetService> services;
 
   CatalogItem({
     required this.id,
@@ -27,18 +50,75 @@ class CatalogItem {
     required this.specifications,
     this.assetPictureUrl,
     this.imageBytes,
+    this.services = const [],
   });
 
   factory CatalogItem.fromJson(Map<String, dynamic> json) {
+    Map<String, dynamic> specs = {};
+    if (json['assetspecifications'] != null) {
+      if (json['assetspecifications'] is Map<String, dynamic>) {
+        specs = Map<String, dynamic>.from(json['assetspecifications']);
+      } else if (json['assetspecifications'] is List) {
+        for (var specEntry in json['assetspecifications']) {
+          if (specEntry is Map && specEntry.containsKey('key') && specEntry.containsKey('value')) {
+            specs[specEntry['key']] = specEntry['value'];
+          }
+        }
+      }
+    }
+
+    List<AssetService> services = [];
+    if (json['assetCatalogServices'] is List) {
+      services = (json['assetCatalogServices'] as List)
+          .map((e) => AssetService.fromJson(e))
+          .toList();
+    }
+
     return CatalogItem(
       id: json['catalogid']?.toString() ?? '',
       name: json['assetlabel']?.toString() ?? 'Nom inconnu',
       category: json['assetcategorylabel']?.toString() ?? 'Autre',
       price: (json['assetnetamount'] ?? 0).toInt(),
       description: json['assetdescription']?.toString() ?? '',
-      specifications: {},
+      specifications: specs,
       assetPictureUrl: json['assetpictureurl']?.toString(),
+      services: services,
     );
+  }
+}
+
+class LeasingSimulationHelper {
+  static int calculateMonthlyPayment({
+    required double price,
+    required double duration,
+    required double downPayment,
+    required double residualValue,
+    required List<AssetService> selectedServices,
+  }) {
+    final totalServiceCost = selectedServices.fold<double>(0, (sum, s) => sum + s.servfixedamount);
+    final adjustedPrice = price + totalServiceCost;
+    final financedAmount = adjustedPrice - downPayment - residualValue;
+    const interestRate = 0.04;
+    final monthlyRate = interestRate / 12;
+    final monthlyPayment = (financedAmount * monthlyRate * pow(1 + monthlyRate, duration)) /
+        (pow(1 + monthlyRate, duration) - 1);
+    return monthlyPayment.round();
+  }
+
+  static int calculateTotalCost({
+    required double monthlyPayment,
+    required double duration,
+    required double downPayment,
+    required double residualValue,
+  }) {
+    return (monthlyPayment * duration + downPayment + residualValue).round();
+  }
+
+  static int calculateTotalInterest({
+    required double totalCost,
+    required double originalPrice,
+  }) {
+    return (totalCost - originalPrice).round();
   }
 }
 
@@ -63,6 +143,8 @@ class _CatalogPageState extends State<CatalogPage> {
   double residualValue = 20;
   String selectedCategory = 'all';
   String selectedSort = 'price';
+  List<bool> selectedServicesCheckbox = [];
+  List<AssetService> selectedServices = [];
 
   @override
   void initState() {
@@ -78,7 +160,6 @@ class _CatalogPageState extends State<CatalogPage> {
       final response = await dio.post(
         'https://demo-backend-utina.teamwill-digital.com/document-service/api/getfile/$imageName',
       );
-
 
       if (response.statusCode == 200 && response.data != null) {
         String? base64String = response.data['description'];
@@ -107,7 +188,6 @@ class _CatalogPageState extends State<CatalogPage> {
 
       final items = await _catalogRepository.fetchCatalogItems();
 
-      // Charger images Base64 pour chaque item avec image
       for (var item in items) {
         if (item.assetPictureUrl != null && item.assetPictureUrl!.isNotEmpty) {
           final imageBytes = await fetchImageBase64(token, item.assetPictureUrl!);
@@ -160,21 +240,31 @@ class _CatalogPageState extends State<CatalogPage> {
     final duration = this.duration;
     final downPayment = this.downPayment;
     final residualValue = (price * this.residualValue) / 100;
-    final financedAmount = price - downPayment - residualValue;
-    const interestRate = 0.04;
-    final monthlyRate = interestRate / 12;
 
-    final monthlyPayment =
-        (financedAmount * monthlyRate * pow(1 + monthlyRate, duration)) /
-            (pow(1 + monthlyRate, duration) - 1);
+    final monthlyPayment = LeasingSimulationHelper.calculateMonthlyPayment(
+      price: price,
+      duration: duration,
+      downPayment: downPayment,
+      residualValue: residualValue,
+      selectedServices: selectedServices,
+    );
 
-    final totalCost = monthlyPayment * duration + downPayment + residualValue;
-    final totalInterest = totalCost - price;
+    final totalCost = LeasingSimulationHelper.calculateTotalCost(
+      monthlyPayment: monthlyPayment.toDouble(),
+      duration: duration,
+      downPayment: downPayment,
+      residualValue: residualValue,
+    );
+
+    final totalInterest = LeasingSimulationHelper.calculateTotalInterest(
+      totalCost: totalCost.toDouble(),
+      originalPrice: price,
+    );
 
     return {
-      'monthlyPayment': monthlyPayment.round(),
-      'totalCost': totalCost.round(),
-      'totalInterest': totalInterest.round(),
+      'monthlyPayment': monthlyPayment,
+      'totalCost': totalCost,
+      'totalInterest': totalInterest,
     };
   }
 
@@ -397,7 +487,7 @@ class _CatalogPageState extends State<CatalogPage> {
           Container(
             height: 270,
             decoration: BoxDecoration(
-              color:Color.fromRGBO(0,61,112,1),
+              color: const Color.fromRGBO(0, 61, 112, 1),
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
@@ -457,8 +547,34 @@ class _CatalogPageState extends State<CatalogPage> {
               onPressed: () {
                 setState(() {
                   selectedItem = item;
+                  selectedServicesCheckbox = List.filled(item.services.length, true);
+                  selectedServices = item.services.toList();
                   showSimulation = true;
                 });
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.info_outline, size: 18),
+              label: const Text('Détail'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF0D1B2A),
+                side: const BorderSide(color: Color(0xFF0D1B2A)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CatalogDetailPage(item: item),
+                  ),
+                );
               },
             ),
           ),
@@ -471,124 +587,248 @@ class _CatalogPageState extends State<CatalogPage> {
     final simulation = calculateLeasing();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF003D70),
+        backgroundColor: const Color(0xFF1E3A8A),
         foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            setState(() => showSimulation = false);
-          },
-        ),
-        title: const Text(
-          'Simulation de leasing',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: const Text('Simulation de leasing'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 700;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                isWide
+                    ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
+                    Expanded(child: _buildProductCardSection()),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildParameterCardSection()),
+                  ],
+                )
+                    : Column(
+                  children: [
+                    _buildProductCardSection(),
+                    const SizedBox(height: 16),
+                    _buildParameterCardSection(),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _buildResultCard(
+                      'Mensualité',
+                      simulation['monthlyPayment'],
+                      Icons.calendar_today,
+                      const Color(0xFF2563EB),
+                      Colors.white,
+                    ),
+                    _buildResultCard(
+                      'Coût total',
+                      simulation['totalCost'],
+                      Icons.euro_symbol,
+                      const Color(0xFF4F46E5),
+                      Colors.white,
+                    ),
+                    _buildResultCard(
+                      'Intérêts',
+                      simulation['totalInterest'],
+                      Icons.trending_up,
+                      const Color(0xFF06B6D4),
+                      Colors.white,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => setState(() => showSimulation = false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF2563EB),
+                        side: const BorderSide(color: Color(0xFF2563EB)),
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: Icon(
-                        getCategoryIcon(selectedItem!.category),
-                        size: 30,
-                        color: Colors.grey[600],
-                      ),
+                      child: const Text('Fermer'),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        selectedItem!.name,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.send),
+                      label: const Text('Demander un devis'),
+                      onPressed: () {
+                        // Action future
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ],
                 ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildProductCardSection() {
+    return Card(
+      color: const Color(0xFFEFF6FF),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              selectedItem!.name,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
+            ),
+            const SizedBox(height: 6),
+            Chip(
+              label: Text(selectedItem!.category),
+              backgroundColor: const Color(0xFFDBEAFE),
+              labelStyle: const TextStyle(color: Color(0xFF2563EB)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              selectedItem!.description,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF1E40AF)),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildSlider(
-              label: 'Durée (mois)',
-              value: duration,
-              min: 12,
-              max: 60,
-              divisions: 48,
-              onChanged: (val) => setState(() => duration = val),
-              displayValue: '${duration.round()}',
-            ),
-            const SizedBox(height: 20),
-            _buildSlider(
-              label: 'Apport initial (€)',
-              value: downPayment,
-              min: 0,
-              max: selectedItem!.price.toDouble(),
-              divisions: selectedItem!.price,
-              onChanged: (val) => setState(() => downPayment = val),
-              displayValue: '${downPayment.round()} €',
-            ),
-            const SizedBox(height: 20),
-            _buildSlider(
-              label: 'Valeur résiduelle (%)',
-              value: residualValue,
-              min: 0,
-              max: 100,
-              divisions: 100,
-              onChanged: (val) => setState(() => residualValue = val),
-              displayValue: '${residualValue.round()} %',
-            ),
-            const SizedBox(height: 40),
-            Card(
-              color: const Color(0xFF2563EB),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              alignment: Alignment.center,
+              child: Text(
+                '${formatPrice(selectedItem!.price)} €',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                child: Column(
-                  children: [
-                    _buildResultRow('Paiement mensuel', '${simulation['monthlyPayment']} €'),
-                    const SizedBox(height: 12),
-                    _buildResultRow('Coût total', '${simulation['totalCost']} €'),
-                    const SizedBox(height: 12),
-                    _buildResultRow('Intérêts totaux', '${simulation['totalInterest']} €'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D1B2A),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                setState(() => showSimulation = false);
-              },
-              child: const Text('Retour au catalogue'),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildParameterCardSection() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Paramètres',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+            const SizedBox(height: 20),
+            _buildSlider(
+              label: 'Durée',
+              value: duration,
+              min: 12,
+              max: 60,
+              divisions: 8,
+              displayValue: '${duration.toInt()} mois',
+              onChanged: (val) => setState(() => duration = val),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Apport initial (€)',
+                labelStyle: const TextStyle(color: Color(0xFF1E3A8A)),
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onChanged: (value) => setState(() => downPayment = double.tryParse(value) ?? 0),
+            ),
+            const SizedBox(height: 16),
+            _buildSlider(
+              label: 'Valeur résiduelle',
+              value: residualValue,
+              min: 0,
+              max: 50,
+              divisions: 10,
+              displayValue: '${residualValue.toInt()} %',
+              onChanged: (val) => setState(() => residualValue = val),
+            ),
+
+            // Section des services additionnels
+            if (selectedItem!.services.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              const Text('Services additionnels',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+              const SizedBox(height: 12),
+              for (int i = 0; i < selectedItem!.services.length; i++)
+                CheckboxListTile(
+                  title: Text(selectedItem!.services[i].servlabel),
+                  subtitle: Text(
+                      "Montant fixe: €${selectedItem!.services[i].servfixedamount} | Pourcentage: ${selectedItem!.services[i].servpercentage}%"),
+                  value: selectedServicesCheckbox[i],
+                  onChanged: (val) {
+                    setState(() {
+                      selectedServicesCheckbox[i] = val ?? false;
+                      selectedServices = [
+                        for (int j = 0; j < selectedItem!.services.length; j++)
+                          if (selectedServicesCheckbox[j]) selectedItem!.services[j],
+                      ];
+                    });
+                  },
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultCard(String title, int value, IconData icon, Color bgColor, Color textColor) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [bgColor.withOpacity(0.85), bgColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 14)),
+              const SizedBox(height: 6),
+              Text(
+                '${formatPrice(value)} €',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          Icon(icon, color: Colors.white, size: 32),
+        ],
       ),
     );
   }
@@ -625,26 +865,89 @@ class _CatalogPageState extends State<CatalogPage> {
       ],
     );
   }
+}
 
-  Widget _buildResultRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+class CatalogDetailPage extends StatelessWidget {
+  final CatalogItem item;
+  const CatalogDetailPage({super.key, required this.item});
+
+  String formatPrice(int price) {
+    return price.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]} ',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Détails du produit'),
+        backgroundColor: const Color(0xFF1E3A8A),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                height: 280,
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(0, 61, 112, 1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: item.imageBytes != null
+                    ? Image.memory(item.imageBytes!, fit: BoxFit.contain)
+                    : Icon(Icons.image_not_supported_outlined, size: 80, color: Colors.grey[500]),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(item.name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
+            const SizedBox(height: 8),
+            Chip(label: Text(item.category), backgroundColor: const Color(0xFFDBEAFE), labelStyle: const TextStyle(color: Color(0xFF2563EB))),
+            const SizedBox(height: 16),
+            Text(item.description, style: const TextStyle(fontSize: 16, color: Color(0xFF1E40AF))),
+            const SizedBox(height: 24),
+            Text('Prix : ${formatPrice(item.price)} €', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
+            const SizedBox(height: 24),
+            if (item.specifications.isNotEmpty) ...[
+              const Text('Spécifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
+              const SizedBox(height: 12),
+              ...item.specifications.entries.map(
+                    (entry) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                    Expanded(flex: 3, child: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E3A8A)))),
+                    Expanded(flex: 5, child: Text(entry.value.toString(), style: const TextStyle(color: Colors.black87))),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            if (item.services.isNotEmpty) ...[
+              const Text('Services associés', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
+              const SizedBox(height: 12),
+              ...item.services.map((service) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Card(
+                  elevation: 1,
+                  child: ListTile(
+                    title: Text(service.servlabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Code: ${service.servcode}\nMontant fixe: ${service.servfixedamount} €\nPourcentage: ${service.servpercentage} %'),
+                  ),
+                ),
+              )),
+            ]
+          ],
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
+
+
