@@ -14,7 +14,7 @@ class AppRepository {
 
     BaseOptions options = BaseOptions(
         followRedirects: false,
-        connectTimeout: const Duration(seconds: 20),
+        connectTimeout: const Duration(seconds: 200),
         receiveTimeout: const Duration(seconds: 20),
         baseUrl: API_BASE_URL);
     dio.options = options;

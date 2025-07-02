@@ -41,26 +41,7 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Nos Produits',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Action voir tout (à personnaliser)
-                  },
-                  child: Text(
-                    'Voir tout',
-                    style: TextStyle(
-                      color: Color(0xFF2563EB),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                const NosProduitsEtStats(),
               ],
             ),
           ),
