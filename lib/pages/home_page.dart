@@ -27,8 +27,8 @@ class _HomePageState extends State<HomePage> {
     const BienvenuePage(),
     const CatalogPage(),
     const ProposalsListScreen(),
-    const ListContratsPage(),  // Add this line
-    FacturesPage(), // Ajoutez cette ligne
+    const ListContratsPage(),  // Page corrigée
+    FacturesPage(),
     CalculatricePage(),
   ];
 
@@ -92,7 +92,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Text(
                     'Votre partenaire de leasing',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                    style: TextStyle(color: Colors.white70, fontSize: 18),
                   ),
                 ],
               ),
@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
             ...List.generate(_navigationItems.length, (index) {
               final item = _navigationItems[index];
               return ListTile(
-                leading: Icon(item.icon, color: _selectedIndex == index ? item.color : Colors.grey),
+                leading: Icon(item.icon, color: _selectedIndex == index ? item.color : Colors.grey[500]),
                 title: Text(
                   item.label,
                   style: TextStyle(

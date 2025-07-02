@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ContractDetailsPage extends StatelessWidget {
-  const ContractDetailsPage({super.key});
+  final Map<String, dynamic> contractData;
+
+  const ContractDetailsPage({super.key, required this.contractData});
 
   @override
   Widget build(BuildContext context) {
+    // Formateurs pour les données
+    final currencyFormat = NumberFormat.currency(symbol: 'MAD', decimalDigits: 2);
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB), // Fond gris clair pour la page
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text('Détails du contrat'),
         backgroundColor: Colors.white,
@@ -20,52 +27,77 @@ class ContractDetailsPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 2,
-          color: Colors.white, // Fond blanc pour la carte
+          color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: ListView(
               children: [
-                const SectionTitle(
-                  title: 'Informations générales',
-                  icon: Icons.description,
+                // Section Informations de base
+                const SectionTitle(title: 'Informations du contrat', icon: Icons.description),
+                DetailItem(
+                  label: 'Référence proposition',
+                  value: contractData['propreference'] ?? 'N/A',
                 ),
-                const DetailItem(
-                  label: 'Proposition',
-                  value: 'Proposition ABC123',
+                DetailItem(
+                  label: 'ID Contrat',
+                  value: contractData['ctrid']?.toString() ?? 'N/A',
                 ),
-                const DetailItem(label: 'Contrat', value: '#LC001'),
-                const DetailItem(label: 'Produit', value: 'BMW X3 2023'),
-                const DetailItem(label: 'Offre', value: 'Offre Premium'),
+                DetailItem(
+                  label: 'Référence contrat',
+                  value: contractData['ctreference'] ?? 'N/A',
+                ),
+                DetailItem(
+                  label: 'Description',
+                  value: contractData['ctdescription'] ?? 'N/A',
+                ),
+                DetailItem(
+                  label: 'Offre',
+                  value: contractData['offeridlabel'] ?? 'N/A',
+                ),
 
+                // Section Client
                 const SectionTitle(title: 'Client', icon: Icons.person),
-                const DetailItem(label: 'Nom du client', value: 'Jean Dupont'),
-
-                const SectionTitle(
-                  title: 'État du contrat',
-                  icon: Icons.timeline,
+                DetailItem(
+                  label: 'Nom client',
+                  value: contractData['clientname'] ?? 'N/A',
                 ),
-                const DetailItem(label: 'Statut', value: 'Actif'),
-                const DetailItem(label: 'Date statut', value: '15/06/2023'),
 
+                // Section Statut
+                const SectionTitle(title: 'Statut', icon: Icons.notifications_active),
+                DetailItem(
+                  label: 'Statut',
+                  value: contractData['ctstatus'] ?? 'N/A',
+                ),
+                DetailItem(
+                  label: 'Date statut',
+                  value: _formatDate(contractData['ctstatusdate']),
+                ),
+
+                // Section Période
+                const SectionTitle(title: 'Période', icon: Icons.calendar_today),
+                DetailItem(
+                  label: 'Date début',
+                  value: _formatDate(contractData['ctestartdate']),
+                ),
+                DetailItem(
+                  label: 'Date fin',
+                  value: _formatDate(contractData['cteenddate']),
+                ),
+                DetailItem(
+                  label: 'Durée (mois)',
+                  value: contractData['cteduration']?.toString() ?? 'N/A',
+                ),
+
+                // Section Paiement
                 const SectionTitle(title: 'Paiement', icon: Icons.payment),
-                const DetailItem(
-                  label: 'Mode de paiement',
-                  value: 'Virement bancaire',
+                DetailItem(
+                  label: 'Premier paiement',
+                  value: currencyFormat.format(contractData['ctefirstpayment'] ?? 0),
                 ),
-                const DetailItem(
-                  label: 'RIB',
-                  value: 'FR76 3000 6000 0112 3456 7890 189',
+                DetailItem(
+                  label: 'Loyer mensuel',
+                  value: currencyFormat.format(contractData['cterentalamount'] ?? 0),
                 ),
-                const DetailItem(label: 'BIC', value: 'AGRIFRPP'),
-                const DetailItem(
-                  label: 'Nom de la banque',
-                  value: 'Crédit Agricole',
-                ),
-                const DetailItem(label: 'Mensualité', value: '500 €'),
-                const DetailItem(label: 'Échéances restantes', value: '24'),
-                const DetailItem(label: 'Interets de retard', value: '0 €'),
-                const DetailItem(label: 'Début', value: '01/07/2023'),
-                const DetailItem(label: 'Fin', value: '01/07/2025'),
               ],
             ),
           ),
@@ -73,8 +105,18 @@ class ContractDetailsPage extends StatelessWidget {
       ),
     );
   }
+
+  String _formatDate(dynamic date) {
+    if (date == null) return 'N/A';
+    try {
+      return DateFormat('dd/MM/yyyy').format(DateTime.parse(date));
+    } catch (e) {
+      return date.toString();
+    }
+  }
 }
 
+// Widgets réutilisables (inchangés)
 class DetailItem extends StatelessWidget {
   final String label;
   final String value;
@@ -92,9 +134,10 @@ class DetailItem extends StatelessWidget {
             flex: 3,
             child: Text(
               '$label :',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                fontSize: 16,
+                color: Colors.grey[700],
               ),
             ),
           ),
@@ -102,7 +145,7 @@ class DetailItem extends StatelessWidget {
             flex: 5,
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ),
         ],
