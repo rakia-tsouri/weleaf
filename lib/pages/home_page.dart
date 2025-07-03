@@ -104,6 +104,7 @@ class _HomePageState extends State<HomePage> {
                 title: Text(
                   item.label,
                   style: TextStyle(
+                    fontSize: 18,
                     color: _selectedIndex == index ? item.color : Colors.black87,
                     fontWeight: _selectedIndex == index ? FontWeight.bold : FontWeight.normal,
                   ),

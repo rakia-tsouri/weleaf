@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/widgets/nos_produits_et_stats.dart';
+import 'package:optorg_mobile/pages/propositions.dart';
+import 'package:optorg_mobile/pages/FacturesImpayees.dart';
+
+
 // Ton widget CatalogueCarousel
 class CatalogueCarousel extends StatefulWidget {
   @override
@@ -190,26 +194,30 @@ class BienvenuePage extends StatelessWidget {
             Column(
               children: [
                 _buildActionTile(
-                  'Nouveau contrat',
-                  'Créer un nouveau contrat de leasing',
+                  'Nouvelle proposition',
+                  'Créez une nouvelle proposition',
                   Icons.add_circle,
                   Colors.green,
-                      () {},
+                      () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PropositionsPage()),
+                    );
+                  },
                 ),
 
+
                 _buildActionTile(
-                  'Voir les tâches',
-                  'Consulter les tâches en cours',
-                  Icons.checklist,
+                  'Payer factures',
+                  'Consultez vos factures impayées rapidement',
+                  Icons.payment,
                   Colors.orange,
-                      () {},
-                ),
-                _buildActionTile(
-                  'Rapports',
-                  'Générer des rapports et analyses',
-                  Icons.analytics,
-                  Colors.purple,
-                      () {},
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => FacturesImpayeesPage()),
+                        );
+                      },
                 ),
               ],
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:optorg_mobile/constants/routes.dart';
 import 'package:optorg_mobile/constants/strings.dart';
 import 'package:optorg_mobile/provider_initializer.dart';
@@ -36,8 +37,6 @@ class MyApp extends StatelessWidget {
       builder: (_, child) => MaterialApp(
         title: appName,
         navigatorKey: AppNavigation.navigatorStateKey,
-
-        // Thème personnalisé combiné
         theme: ThemeData(
           primarySwatch: Colors.blue,
           primaryColor: const Color(0xFF2563EB),
@@ -62,20 +61,14 @@ class MyApp extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
+          textTheme: GoogleFonts.interTextTheme(), // ✅ Added line
         ),
-
-        // Routes & navigation
         initialRoute: ROUTE_TO_SPLASHSCREEN,
         routes: {
           ROUTE_TO_SPLASHSCREEN: (context) => const SplashScreen(),
-          // Si tu veux mettre la HomePage comme route fixe (optionnel)
-          // '/home': (context) => const HomePage(),
         },
         onGenerateRoute: onGenerateRoute,
-
         debugShowCheckedModeBanner: false,
-
-        // Localisations
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
@@ -85,11 +78,7 @@ class MyApp extends StatelessWidget {
           Locale('fr'),
           Locale('en'),
         ],
-
-        // Si tu veux afficher la HomePage par défaut au lieu SplashScreen, tu peux remplacer initialRoute par :
-        // home: const HomePage(),
       ),
     );
   }
 }
-
