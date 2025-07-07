@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:optorg_mobile/pages/proposition_page.dart';
 import 'bienvenue_page.dart';
-import 'package:optorg_mobile/views/proposals_list_screen/proposals_list_screen.dart';
 import 'package:optorg_mobile/constants/routes.dart';
 import 'package:optorg_mobile/utils/app_data_store.dart';
 import 'package:optorg_mobile/utils/shared_prefs.dart';
@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const BienvenuePage(),
     const CatalogPage(),
-    const ProposalsListScreen(),
+    const ProposalsPage(),
     const ListContratsPage(),  // Page corrigée
     FacturesPage(),
     CalculatricePage(),

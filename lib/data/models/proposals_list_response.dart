@@ -2,7 +2,6 @@ class ProposalListResponse {
   String? code;
   String? message;
   String? description;
-
   List<Proposal>? list;
 
   ProposalListResponse({this.code, this.message, this.description, this.list});
@@ -15,18 +14,18 @@ class ProposalListResponse {
     if (json['list'] != null) {
       list = <Proposal>[];
       json['list'].forEach((v) {
-        list!.add(new Proposal.fromJson(v));
+        list!.add(Proposal.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['code'] = this.code;
-    data['message'] = this.message;
-    data['description'] = this.description;
-    if (this.list != null) {
-      data['list'] = this.list!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['code'] = code;
+    data['message'] = message;
+    data['description'] = description;
+    if (list != null) {
+      data['list'] = list!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -42,6 +41,8 @@ class Proposal {
   String? ctstatusdate;
   int? tpidclient;
   String? prcode;
+  String? assetPictureUrl;
+  List? imageBytes;
 
   String? ctorderdate;
   String? ctdeliverydate;
@@ -80,51 +81,54 @@ class Proposal {
   double? mfavailableamount;
   double? mfagreedamount;
 
-  Proposal(
-      {this.ctrid,
-      this.ctreference,
-      this.mgid,
-      this.ctdescription,
-      this.ctphase,
-      this.ctstatus,
-      this.ctstatusdate,
-      this.tpidclient,
-      this.prcode,
-      this.ctorderdate,
-      this.ctdeliverydate,
-      this.ctactivationdate,
-      this.ctfinancedamount,
-      this.tpreference,
-      this.clientname,
-      this.statuslabel,
-      this.ctstage,
-      this.propreference,
-      this.tpidbroker,
-      this.tprefbroker,
-      this.brokername,
-      this.ctnetworkcode,
-      this.mcid,
-      this.offerid,
-      this.offeridlabel,
-      this.prcodelabel,
-      this.mfid,
-      this.mfreference,
-      this.currcode,
-      this.ctcomment,
-      this.cteduration,
-      this.cteupfrontamount,
-      this.ctervamount,
-      this.ctefirstpayment,
-      this.cterentalamount,
-      this.ctepartamount,
-      this.ctegraceperiodduration,
-      this.ctedescription,
-      this.assetpictureurl,
-      this.catalogid,
-      this.mfusedamount,
-      this.mfbookedamount,
-      this.mfavailableamount,
-      this.mfagreedamount});
+  Proposal({
+    this.ctrid,
+    this.ctreference,
+    this.mgid,
+    this.ctdescription,
+    this.ctphase,
+    this.ctstatus,
+    this.assetPictureUrl,
+    this.ctstatusdate,
+    this.tpidclient,
+    this.prcode,
+    this.ctorderdate,
+    this.ctdeliverydate,
+    this.ctactivationdate,
+    this.ctfinancedamount,
+    this.tpreference,
+    this.clientname,
+    this.statuslabel,
+    this.ctstage,
+    this.propreference,
+    this.tpidbroker,
+    this.tprefbroker,
+    this.brokername,
+    this.ctnetworkcode,
+    this.mcid,
+    this.offerid,
+    this.offeridlabel,
+    this.prcodelabel,
+    this.mfid,
+    this.mfreference,
+    this.currcode,
+    this.ctcomment,
+    this.cteduration,
+    this.cteupfrontamount,
+    this.ctervamount,
+    this.ctefirstpayment,
+    this.cterentalamount,
+    this.ctepartamount,
+    this.ctegraceperiodduration,
+    this.ctedescription,
+    this.assetpictureurl,
+    this.catalogid,
+    this.mfusedamount,
+    this.mfbookedamount,
+    this.mfavailableamount,
+    this.mfagreedamount,
+    this.imageBytes,
+  });
 
   Proposal.fromJson(Map<String, dynamic> json) {
     ctrid = json['ctrid'];
@@ -136,6 +140,7 @@ class Proposal {
     ctstatusdate = json['ctstatusdate'];
     tpidclient = json['tpidclient'];
     prcode = json['prcode'];
+    assetPictureUrl = json['assetpictureurl'];
 
     ctorderdate = json['ctorderdate'];
     ctdeliverydate = json['ctdeliverydate'];
@@ -176,53 +181,53 @@ class Proposal {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['ctrid'] = this.ctrid;
-    data['ctreference'] = this.ctreference;
-    data['mgid'] = this.mgid;
-    data['ctdescription'] = this.ctdescription;
-    data['ctphase'] = this.ctphase;
-    data['ctstatus'] = this.ctstatus;
-    data['ctstatusdate'] = this.ctstatusdate;
-    data['tpidclient'] = this.tpidclient;
-    data['prcode'] = this.prcode;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['ctrid'] = ctrid;
+    data['ctreference'] = ctreference;
+    data['mgid'] = mgid;
+    data['ctdescription'] = ctdescription;
+    data['ctphase'] = ctphase;
+    data['ctstatus'] = ctstatus;
+    data['ctstatusdate'] = ctstatusdate;
+    data['tpidclient'] = tpidclient;
+    data['prcode'] = prcode;
 
-    data['ctorderdate'] = this.ctorderdate;
-    data['ctdeliverydate'] = this.ctdeliverydate;
-    data['ctactivationdate'] = this.ctactivationdate;
-    data['ctfinancedamount'] = this.ctfinancedamount;
-    data['tpreference'] = this.tpreference;
-    data['clientname'] = this.clientname;
-    data['statuslabel'] = this.statuslabel;
-    data['ctstage'] = this.ctstage;
-    data['propreference'] = this.propreference;
-    data['tpidbroker'] = this.tpidbroker;
-    data['tprefbroker'] = this.tprefbroker;
-    data['brokername'] = this.brokername;
-    data['ctnetworkcode'] = this.ctnetworkcode;
-    data['mcid'] = this.mcid;
-    data['offerid'] = this.offerid;
-    data['offeridlabel'] = this.offeridlabel;
-    data['prcodelabel'] = this.prcodelabel;
-    data['mfid'] = this.mfid;
-    data['mfreference'] = this.mfreference;
-    data['currcode'] = this.currcode;
-    data['ctcomment'] = this.ctcomment;
-    data['cteduration'] = this.cteduration;
-    data['cteupfrontamount'] = this.cteupfrontamount;
-    data['ctervamount'] = this.ctervamount;
-    data['ctefirstpayment'] = this.ctefirstpayment;
-    data['cterentalamount'] = this.cterentalamount;
-    data['ctepartamount'] = this.ctepartamount;
-    data['ctegraceperiodduration'] = this.ctegraceperiodduration;
-    data['ctedescription'] = this.ctedescription;
-    data['assetpictureurl'] = this.assetpictureurl;
-    data['catalogid'] = this.catalogid;
+    data['ctorderdate'] = ctorderdate;
+    data['ctdeliverydate'] = ctdeliverydate;
+    data['ctactivationdate'] = ctactivationdate;
+    data['ctfinancedamount'] = ctfinancedamount;
+    data['tpreference'] = tpreference;
+    data['clientname'] = clientname;
+    data['statuslabel'] = statuslabel;
+    data['ctstage'] = ctstage;
+    data['propreference'] = propreference;
+    data['tpidbroker'] = tpidbroker;
+    data['tprefbroker'] = tprefbroker;
+    data['brokername'] = brokername;
+    data['ctnetworkcode'] = ctnetworkcode;
+    data['mcid'] = mcid;
+    data['offerid'] = offerid;
+    data['offeridlabel'] = offeridlabel;
+    data['prcodelabel'] = prcodelabel;
+    data['mfid'] = mfid;
+    data['mfreference'] = mfreference;
+    data['currcode'] = currcode;
+    data['ctcomment'] = ctcomment;
+    data['cteduration'] = cteduration;
+    data['cteupfrontamount'] = cteupfrontamount;
+    data['ctervamount'] = ctervamount;
+    data['ctefirstpayment'] = ctefirstpayment;
+    data['cterentalamount'] = cterentalamount;
+    data['ctepartamount'] = ctepartamount;
+    data['ctegraceperiodduration'] = ctegraceperiodduration;
+    data['ctedescription'] = ctedescription;
+    data['assetpictureurl'] = assetpictureurl;
+    data['catalogid'] = catalogid;
 
-    data['mfusedamount'] = this.mfusedamount;
-    data['mfbookedamount'] = this.mfbookedamount;
-    data['mfavailableamount'] = this.mfavailableamount;
-    data['mfagreedamount'] = this.mfagreedamount;
+    data['mfusedamount'] = mfusedamount;
+    data['mfbookedamount'] = mfbookedamount;
+    data['mfavailableamount'] = mfavailableamount;
+    data['mfagreedamount'] = mfagreedamount;
     return data;
   }
 }

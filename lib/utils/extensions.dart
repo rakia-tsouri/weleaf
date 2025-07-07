@@ -8,7 +8,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:money_formatter/money_formatter.dart';
 import 'package:optorg_mobile/constants/constants.dart';
-import 'package:optorg_mobile/views/proposals_list_screen/proposal_details/offer_details_info.dart';
 import 'dart:math';
 import 'package:sprintf/sprintf.dart';
 
@@ -270,10 +269,4 @@ class HexColor extends Color {
 
 // +++++++++++++++++++
 // +++++++++++++++++++
-extension IOfferDetailsInfoTypeX on IOfferDetailsInfoType {
-  IOfferDetailsInfoType next() {
-    final int nextIndex =
-        (this.index + 1) % IOfferDetailsInfoType.values.length;
-    return IOfferDetailsInfoType.values[nextIndex];
-  }
-}
+
