@@ -6,7 +6,7 @@ class CalendarService {
   static Future<List<Calendar>> fetchCalendars() async {
     final response = await http.get(
       Uri.parse('https://demo-backend-utina.teamwill-digital.com/configuration-service/api/parcalendar'),
-      headers: {'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyMTYiLCJpYXQiOjE3NTE2Mjg5NDksImV4cCI6MTc1MjIzMzc0OX0.0oBXmWzg7-f1upG6AGeSWQYTiNwVGc7jR0hLSpIr2mWlCqOYFt4tctXti03ZeNO_A2_noJxXjipJ6rnrLPUCXg',
+      headers: {'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyMTYiLCJpYXQiOjE3NTE4NzYyNDksImV4cCI6MTc1MjQ4MTA0OX0.C2YnueXJFFiz0F0GxTETXrXWPkY_5Bv8mD3p6DVUjSHVoNfT1F3Rvt3Gjz1QgNiut7hiEyeGzjF9hPHruGt1IQ',
         'Content-Type': 'application/json',},
     );
 

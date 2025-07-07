@@ -4,7 +4,7 @@ import 'dart:convert';
 class ProductRepository {
   static const String _baseUrl = "https://demo-backend-utina.teamwill-digital.com";
   static const String _endpoint = "/configuration-service/api/productlist";
-  static const String _token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyMTYiLCJpYXQiOjE3NTE2Mjg5NDksImV4cCI6MTc1MjIzMzc0OX0.0oBXmWzg7-f1upG6AGeSWQYTiNwVGc7jR0hLSpIr2mWlCqOYFt4tctXti03ZeNO_A2_noJxXjipJ6rnrLPUCXg"; // Remplacez par votre vrai token
+  static const String _token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyMTYiLCJpYXQiOjE3NTE4NzYyNDksImV4cCI6MTc1MjQ4MTA0OX0.C2YnueXJFFiz0F0GxTETXrXWPkY_5Bv8mD3p6DVUjSHVoNfT1F3Rvt3Gjz1QgNiut7hiEyeGzjF9hPHruGt1IQ"; // Remplacez par votre vrai token
 
   Future<List<Map<String, dynamic>>> fetchProducts() async {
     final response = await http.get(

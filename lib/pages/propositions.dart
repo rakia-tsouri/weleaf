@@ -105,7 +105,7 @@ class _PropositionsPageState extends State<PropositionsPage>
         controller: _tabController,
         children: [
           SimulateurForm(),
-          AttributsForm(),
+          AttributsDisplay(),
         ],
       ),
     );
