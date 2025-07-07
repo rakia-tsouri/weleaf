@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class ContractDetailsPage extends StatelessWidget {
-  final Map<String, dynamic> contractData;
-
-  const ContractDetailsPage({super.key, required this.contractData});
+  const ContractDetailsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Formateurs pour les données
-    final currencyFormat = NumberFormat.currency(symbol: 'MAD', decimalDigits: 2);
-    final dateFormat = DateFormat('dd/MM/yyyy');
-
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -34,70 +27,31 @@ class ContractDetailsPage extends StatelessWidget {
               children: [
                 // Section Informations de base
                 const SectionTitle(title: 'Informations du contrat', icon: Icons.description),
-                DetailItem(
-                  label: 'Référence proposition',
-                  value: contractData['propreference'] ?? 'N/A',
-                ),
-                DetailItem(
-                  label: 'ID Contrat',
-                  value: contractData['ctrid']?.toString() ?? 'N/A',
-                ),
-                DetailItem(
-                  label: 'Référence contrat',
-                  value: contractData['ctreference'] ?? 'N/A',
-                ),
-                DetailItem(
-                  label: 'Description',
-                  value: contractData['ctdescription'] ?? 'N/A',
-                ),
-                DetailItem(
-                  label: 'Offre',
-                  value: contractData['offeridlabel'] ?? 'N/A',
-                ),
+                const DetailItem(label: 'Référence proposition', value: '0000004562'),
+                const DetailItem(label: 'ID Contrat', value: '4625'),
+                const DetailItem(label: 'Référence contrat', value: '0000002786'),
+                const DetailItem(label: 'Description', value: 'Scania S580'),
+                const DetailItem(label: 'Offre', value: 'Long-term rental offer SC'),
 
                 // Section Client
                 const SectionTitle(title: 'Client', icon: Icons.person),
-                DetailItem(
-                  label: 'Nom client',
-                  value: contractData['clientname'] ?? 'N/A',
-                ),
+                const DetailItem(label: 'Nom client', value: 'Ahmed Mahmoud'),
 
                 // Section Statut
-                const SectionTitle(title: 'Statut', icon: Icons.notifications_active),
-                DetailItem(
-                  label: 'Statut',
-                  value: contractData['ctstatus'] ?? 'N/A',
-                ),
-                DetailItem(
-                  label: 'Date statut',
-                  value: _formatDate(contractData['ctstatusdate']),
-                ),
+                const SectionTitle(title: 'Statut', icon: Icons.notifications_active), // a changer
+                const DetailItem(label: 'Statut', value: 'ACTIVE'),
+                const DetailItem(label: 'Date statut', value: '18/06/2025'),
 
                 // Section Période
                 const SectionTitle(title: 'Période', icon: Icons.calendar_today),
-                DetailItem(
-                  label: 'Date début',
-                  value: _formatDate(contractData['ctestartdate']),
-                ),
-                DetailItem(
-                  label: 'Date fin',
-                  value: _formatDate(contractData['cteenddate']),
-                ),
-                DetailItem(
-                  label: 'Durée (mois)',
-                  value: contractData['cteduration']?.toString() ?? 'N/A',
-                ),
+                const DetailItem(label: 'Date début', value: '18/06/2025'),
+                const DetailItem(label: 'Date fin', value: '25/06/2028'),
+                const DetailItem(label: 'Durée (mois)', value: '36'),
 
                 // Section Paiement
                 const SectionTitle(title: 'Paiement', icon: Icons.payment),
-                DetailItem(
-                  label: 'Premier paiement',
-                  value: currencyFormat.format(contractData['ctefirstpayment'] ?? 0),
-                ),
-                DetailItem(
-                  label: 'Loyer mensuel',
-                  value: currencyFormat.format(contractData['cterentalamount'] ?? 0),
-                ),
+                const DetailItem(label: 'Premier paiement', value: '7 310,00 MAD'),
+                const DetailItem(label: 'Loyer mensuel', value: '22 131,57 MAD'),
               ],
             ),
           ),
@@ -105,18 +59,9 @@ class ContractDetailsPage extends StatelessWidget {
       ),
     );
   }
-
-  String _formatDate(dynamic date) {
-    if (date == null) return 'N/A';
-    try {
-      return DateFormat('dd/MM/yyyy').format(DateTime.parse(date));
-    } catch (e) {
-      return date.toString();
-    }
-  }
 }
 
-// Widgets réutilisables (inchangés)
+// Widgets réutilisables (à garder identiques)
 class DetailItem extends StatelessWidget {
   final String label;
   final String value;

@@ -20,13 +20,14 @@ class NosProduitsEtStats extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: 1.7, // Ajustez ce ratio selon vos besoins
           children: [
             _buildStatCard('Contrats actifs', '156', Icons.description, Colors.green),
-            _buildStatCard('Factures', '23', Icons.pending, Colors.orange),
-            _buildStatCard('Impayés', '89', Icons.receipt, Colors.blue),
-            _buildStatCard('Montant total', '12', Icons.task, Colors.purple),
+            _buildStatCard('Factures en attente', '23', Icons.receipt, Colors.orange),
+            _buildStatCard('Montant total', '12 €', Icons.euro, Colors.blue),
+            _buildStatCard('Impayés', '89 €', Icons.warning, Colors.red),
           ],
         ),
       ],
@@ -36,21 +37,35 @@ class NosProduitsEtStats extends StatelessWidget {
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Reduced vertical padding
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 32, color: color),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(icon, size: 26, color: color),
+                const SizedBox(width: 8),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
-              value,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color),
-            ),
-            const SizedBox(height: 4),
-            Text(
               title,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[700],
+              ),
+              textAlign: TextAlign.left,
             ),
           ],
         ),
