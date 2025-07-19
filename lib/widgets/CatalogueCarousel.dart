@@ -5,6 +5,7 @@ import 'package:optorg_mobile/utils/app_data_store.dart';
 import 'package:dio/dio.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:async'; // Ajout pour Timer
 
 class CatalogueCarousel extends StatefulWidget {
   const CatalogueCarousel({Key? key}) : super(key: key);
@@ -22,6 +23,10 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
   final AppDataStore _appDataStore = AppDataStore();
   List<CatalogItem> _catalogItems = [];
 
+  // Timer pour l'auto-scroll
+  Timer? _autoScrollTimer;
+  bool _userInteracting = false; // Pour savoir si l'utilisateur interagit
+
   @override
   void initState() {
     super.initState();
@@ -31,18 +36,41 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
   @override
   void dispose() {
     _pageController.dispose();
+    _autoScrollTimer?.cancel(); // Annuler le timer
     super.dispose();
+  }
+
+  // Fonction pour démarrer l'auto-scroll
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel(); // Annuler le timer existant s'il y en a un
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (!_userInteracting && _catalogItems.isNotEmpty && mounted) {
+        int nextPage = (_currentPage + 1) % _catalogItems.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  // Fonction pour arrêter temporairement l'auto-scroll
+  void _pauseAutoScroll() {
+    _userInteracting = true;
+    // Reprendre l'auto-scroll après 3 secondes d'inactivité
+    Timer(const Duration(seconds: 3), () {
+      _userInteracting = false;
+    });
   }
 
   Future<Uint8List?> fetchImageBase64(String token, String imageName) async {
     try {
       final dio = Dio();
       dio.options.headers['Authorization'] = 'Bearer $token';
-
       final response = await dio.post(
         'https://demo-backend-utina.teamwill-digital.com/document-service/api/getfile/$imageName',
       );
-
       if (response.statusCode == 200 && response.data != null) {
         String? base64String = response.data['description'];
         if (base64String != null && base64String.isNotEmpty) {
@@ -69,9 +97,9 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
       });
 
       final items = await _catalogRepository.fetchCatalogItems();
-
       // Load images for the first few items (for the carousel)
       final itemsToLoad = items.take(4).toList(); // Limit to 4 items for the carousel
+
       for (var item in itemsToLoad) {
         if (item.assetPictureUrl != null && item.assetPictureUrl!.isNotEmpty) {
           final imageBytes = await fetchImageBase64(token, item.assetPictureUrl!);
@@ -83,6 +111,11 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
         _catalogItems = itemsToLoad;
         _isLoading = false;
       });
+
+      // Démarrer l'auto-scroll une fois les données chargées
+      if (_catalogItems.isNotEmpty) {
+        _startAutoScroll();
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Erreur de chargement: ${e.toString()}';
@@ -148,18 +181,18 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
                   );
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFFF0F9FF), // Bleu ultra clair
+                  backgroundColor: const Color(0xFFF0F9FF),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30), // Bordure très arrondie
+                    borderRadius: BorderRadius.circular(30),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  minimumSize: Size.zero, // Pour un bouton plus compact
+                  minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: const Text(
                   'Voir tout',
                   style: TextStyle(
-                    color: Color(0xFF007BFF), // Bleu vif pour le texte
+                    color: Color(0xFF007BFF),
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
@@ -173,14 +206,19 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
           height: 180,
           child: PageView.builder(
             controller: _pageController,
-            onPageChanged: (index) => setState(() => _currentPage = index),
+            onPageChanged: (index) {
+              setState(() => _currentPage = index);
+              _pauseAutoScroll(); // Pause l'auto-scroll quand l'utilisateur change de page
+            },
             itemCount: _catalogItems.length,
             itemBuilder: (context, index) {
               final item = _catalogItems[index];
               return GestureDetector(
                 onTap: () {
+                  _pauseAutoScroll(); // Pause l'auto-scroll quand l'utilisateur tape
                   // Navigate to product detail if needed
                 },
+                onPanStart: (_) => _pauseAutoScroll(), // Pause quand l'utilisateur commence à faire glisser
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(

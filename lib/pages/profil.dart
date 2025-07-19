@@ -332,25 +332,31 @@ class _ProfilePageState extends State<ProfilePage> {
       // Layout mobile : tout en vertical
       return Column(
         children: [
-          // Bouton retour en haut à gauche
+          // Nouvelle ligne avec le titre "Compte"
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.arrow_back),
                 iconSize: 24,
               ),
-              const Spacer(),
+              const SizedBox(width: 8), // petit espace entre l'icône et le texte
+              const Text(
+                'Compte',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
 
+
           const SizedBox(height: 20),
 
-          // Avatar et infos
+          // Avatar et infos (reste inchangé)
           Column(
             children: [
-              // Avatar
               Container(
                 width: 90,
                 height: 90,
@@ -365,17 +371,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Nom principal (utilise surname de l'API)
               Text(
                 _userProfile?.surname ?? appName,
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
-              // Email (utilise email de l'API)
               Text(
                 _userProfile?.email ?? 'Email non disponible',
                 style: TextStyle(
@@ -402,7 +406,14 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Center(
               child: Column(
                 children: [
-                  // Avatar
+                  const Text(
+                    'Compte',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Container(
                     width: 100,
                     height: 100,
@@ -417,7 +428,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Nom principal (utilise surname de l'API)
                   Text(
                     _userProfile?.surname ?? appName,
                     style: const TextStyle(
@@ -427,11 +437,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Email (utilise email de l'API)
                   Text(
                     _userProfile?.email ?? 'Email non disponible',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       color: Colors.grey[600],
                     ),
                   ),
