@@ -133,17 +133,38 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const CatalogPage()),
+                    MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Catalogue'),
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                        body: const CatalogPage(),
+                      ),
+                    ),
                   );
                 },
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFFF0F9FF), // Bleu ultra clair
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30), // Bordure très arrondie
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  minimumSize: Size.zero, // Pour un bouton plus compact
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: const Text(
                   'Voir tout',
                   style: TextStyle(
-                    color: Color(0xFF2563EB),
-                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF007BFF), // Bleu vif pour le texte
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
                   ),
                 ),
-              ),
+              )
             ],
           ),
         ),

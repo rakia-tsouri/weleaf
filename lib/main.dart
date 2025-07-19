@@ -9,7 +9,6 @@ import 'package:optorg_mobile/provider_initializer.dart';
 import 'package:optorg_mobile/utils/app_navigation.dart';
 import 'package:optorg_mobile/utils/routes_utils.dart';
 import 'package:optorg_mobile/views/splashscreen/splash_screen.dart';
-import 'package:optorg_mobile/pages/home_page.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -26,6 +25,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Verrouille l'application en portrait uniquement
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -37,6 +37,7 @@ class MyApp extends StatelessWidget {
       builder: (_, child) => MaterialApp(
         title: appName,
         navigatorKey: AppNavigation.navigatorStateKey,
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
           primaryColor: const Color(0xFF2563EB),
@@ -55,20 +56,19 @@ class MyApp extends StatelessWidget {
               ),
             ),
           ),
-          cardTheme: CardTheme(
+          cardTheme: CardThemeData(
             elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          textTheme: GoogleFonts.interTextTheme(), // ✅ Added line
+          textTheme: GoogleFonts.interTextTheme(), // Typographie Inter
         ),
         initialRoute: ROUTE_TO_SPLASHSCREEN,
         routes: {
           ROUTE_TO_SPLASHSCREEN: (context) => const SplashScreen(),
         },
         onGenerateRoute: onGenerateRoute,
-        debugShowCheckedModeBanner: false,
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

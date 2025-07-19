@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import 'package:money_formatter/money_formatter.dart';
+
 import 'package:optorg_mobile/constants/constants.dart';
 import 'dart:math';
 import 'package:sprintf/sprintf.dart';
@@ -215,43 +215,41 @@ extension DioExtensions on Dio {
 // +++++++++++++++++++++
 // +++++++++++++++++++++
 extension IntExtensions on int? {
-  String amountFormat(
-      {String currency = CURRENCY_SYMBOL, bool withCurrency = true}) {
-    MoneyFormatter formatted = new MoneyFormatter(
-        amount: this?.toDouble() ?? 0,
-        settings: MoneyFormatterSettings(
-          symbol: currency,
-          thousandSeparator: ' ',
-          decimalSeparator: '.',
-          symbolAndNumberSeparator: ' ',
-          fractionDigits: 0,
-        ));
-    return withCurrency
-        ? formatted.output.symbolOnRight
-        : formatted.output.nonSymbol;
+  String amountFormat({
+    String currency = CURRENCY_SYMBOL,
+    bool withCurrency = true,
+    String locale = 'fr_FR',
+    int fractionDigits = 0,
+  }) {
+    final format = NumberFormat.currency(
+      locale: locale,
+      symbol: withCurrency ? currency : '',
+      decimalDigits: fractionDigits,
+    );
+    return format.format(this ?? 0);
   }
 }
+
 
 // +++++++++++++++++++++
 // +++++++++++++++++++++ NullDoubleExtensions double
 // +++++++++++++++++++++
 extension NullDoubleExtensions on double? {
-  String amountFormat(
-      {String currency = CURRENCY_SYMBOL, bool withCurrency = true}) {
-    MoneyFormatter formatted = new MoneyFormatter(
-        amount: this ?? 0,
-        settings: MoneyFormatterSettings(
-          symbol: currency,
-          thousandSeparator: ' ',
-          decimalSeparator: ',',
-          symbolAndNumberSeparator: ' ',
-          fractionDigits: 2,
-        ));
-    return withCurrency
-        ? formatted.output.symbolOnRight
-        : formatted.output.nonSymbol;
+  String amountFormat({
+    String currency = CURRENCY_SYMBOL,
+    bool withCurrency = true,
+    String locale = 'fr_FR',
+    int fractionDigits = 2,
+  }) {
+    final format = NumberFormat.currency(
+      locale: locale,
+      symbol: withCurrency ? currency : '',
+      decimalDigits: fractionDigits,
+    );
+    return format.format(this ?? 0);
   }
 }
+
 
 // +++++++++++++++++++
 // +++++++++++++++++++

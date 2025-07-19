@@ -12,6 +12,7 @@ import 'listContrats.dart';
 import 'FacturesPayees.dart';
 import 'FacturesImpayees.dart';
 import 'calculatrice.dart';
+import 'package:optorg_mobile/pages/profil.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -68,7 +69,12 @@ class _HomePageState extends State<HomePage> {
             ),
             IconButton(
               icon: const Icon(Icons.account_circle, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
+              },
             ),
           ],
           backgroundColor: Colors.transparent,
@@ -180,39 +186,41 @@ class _HomePageState extends State<HomePage> {
 }
 
 class FacturesPage extends StatelessWidget {
+  const FacturesPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF2563EB),
-        title: Text('Factures', style: TextStyle(color: Colors.white)),
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          toolbarHeight: 10, // Optimal height for larger tabs
+          titleSpacing: 0,
+          bottom: TabBar(
+            labelStyle: TextStyle(
+              fontSize: 18, // Increased from default 14
+              fontWeight: FontWeight.w500,
+            ),
+            unselectedLabelStyle: TextStyle(
+              fontSize: 18, // Same size for both states
+              fontWeight: FontWeight.w500,
+            ),
+            labelColor: const Color(0xFF2563EB),
+            unselectedLabelColor: Colors.grey[600],
+            indicatorColor: const Color(0xFF2563EB),
+            indicatorWeight: 3,
+            tabs: const [
+              Tab(text: 'Payées'),
+              Tab(text: 'Impayées'),
+            ],
+          ),
+        ),
+        body: TabBarView(
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FacturesPayeesPage()),
-                );
-              },
-              child: Text('Factures Payées'),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FacturesImpayeesPage(),
-                  ),
-                );
-              },
-              child: Text('Factures Impayées'),
-            ),
+            FacturesPayeesPage(),
+            FacturesImpayeesPage(),
           ],
         ),
       ),
