@@ -13,6 +13,7 @@ import 'FacturesPayees.dart';
 import 'FacturesImpayees.dart';
 import 'calculatrice.dart';
 import 'package:optorg_mobile/pages/profil.dart';
+import 'package:optorg_mobile/pages/Notiflist.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -65,7 +66,12 @@ class _HomePageState extends State<HomePage> {
           actions: [
             IconButton(
               icon: const Icon(Icons.notifications, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotificationPage()),
+                );
+              },
             ),
             IconButton(
               icon: const Icon(Icons.account_circle, color: Colors.white),
