@@ -30,6 +30,28 @@ class AssetService {
   }
 }
 
+class AssetOption {
+  final String optcode;
+  final String optlabel;
+  final double optprice;
+  bool isSelected;
+
+  AssetOption({
+    required this.optcode,
+    required this.optlabel,
+    required this.optprice,
+    this.isSelected = false,
+  });
+
+  factory AssetOption.fromJson(Map<String, dynamic> json) {
+    return AssetOption(
+      optcode: json['optcode'] ?? '',
+      optlabel: json['optcodelabel'] ?? json['optlabel'] ?? '',
+      optprice: (json['optnetamount'] ?? 0).toDouble(),
+    );
+  }
+}
+
 class CatalogItem {
   final String id;
   final String name;
@@ -40,6 +62,7 @@ class CatalogItem {
   final Map<String, dynamic> specifications;
   Uint8List? imageBytes;
   final List<AssetService> services;
+  final List<AssetOption> options;
 
   CatalogItem({
     required this.id,
@@ -51,6 +74,7 @@ class CatalogItem {
     this.assetPictureUrl,
     this.imageBytes,
     this.services = const [],
+    this.options = const [],
   });
 
   factory CatalogItem.fromJson(Map<String, dynamic> json) {
@@ -74,6 +98,13 @@ class CatalogItem {
           .toList();
     }
 
+    List<AssetOption> options = [];
+    if (json['assetCatalogOptions'] is List) {
+      options = (json['assetCatalogOptions'] as List)
+          .map((e) => AssetOption.fromJson(e))
+          .toList();
+    }
+
     return CatalogItem(
       id: json['catalogid']?.toString() ?? '',
       name: json['assetlabel']?.toString() ?? 'Nom inconnu',
@@ -83,6 +114,7 @@ class CatalogItem {
       specifications: specs,
       assetPictureUrl: json['assetpictureurl']?.toString(),
       services: services,
+      options: options,
     );
   }
 }
@@ -94,9 +126,11 @@ class LeasingSimulationHelper {
     required double downPayment,
     required double residualValue,
     required List<AssetService> selectedServices,
+    required List<AssetOption> selectedOptions,
   }) {
     final totalServiceCost = selectedServices.fold<double>(0, (sum, s) => sum + s.servfixedamount);
-    final adjustedPrice = price + totalServiceCost;
+    final totalOptionsCost = selectedOptions.fold<double>(0, (sum, o) => sum + o.optprice);
+    final adjustedPrice = price + totalServiceCost + totalOptionsCost;
     final financedAmount = adjustedPrice - downPayment - residualValue;
     const interestRate = 0.04;
     final monthlyRate = interestRate / 12;
@@ -145,6 +179,8 @@ class _CatalogPageState extends State<CatalogPage> {
   String selectedSort = 'price';
   List<bool> selectedServicesCheckbox = [];
   List<AssetService> selectedServices = [];
+  List<bool> selectedOptionsCheckbox = [];
+  List<AssetOption> selectedOptions = [];
 
   @override
   void initState() {
@@ -247,6 +283,7 @@ class _CatalogPageState extends State<CatalogPage> {
       downPayment: downPayment,
       residualValue: residualValue,
       selectedServices: selectedServices,
+      selectedOptions: selectedOptions,
     );
 
     final totalCost = LeasingSimulationHelper.calculateTotalCost(
@@ -265,6 +302,8 @@ class _CatalogPageState extends State<CatalogPage> {
       'monthlyPayment': monthlyPayment,
       'totalCost': totalCost,
       'totalInterest': totalInterest,
+      'totalOptions': selectedOptions.fold<double>(0, (sum, o) => sum + o.optprice).round(),
+      'totalServices': selectedServices.fold<double>(0, (sum, s) => sum + s.servfixedamount).round(),
     };
   }
 
@@ -547,8 +586,10 @@ class _CatalogPageState extends State<CatalogPage> {
               onPressed: () {
                 setState(() {
                   selectedItem = item;
-                  selectedServicesCheckbox = List.filled(item.services.length, true);
-                  selectedServices = item.services.toList();
+                  selectedServicesCheckbox = List.filled(item.services.length, false);
+                  selectedServices = [];
+                  selectedOptionsCheckbox = List.filled(item.options.length, false);
+                  selectedOptions = [];
                   showSimulation = true;
                 });
               },
@@ -644,6 +685,22 @@ class _CatalogPageState extends State<CatalogPage> {
                       const Color(0xFF06B6D4),
                       Colors.white,
                     ),
+                    if (simulation['totalOptions'] > 0)
+                      _buildResultCard(
+                        'Options',
+                        simulation['totalOptions'],
+                        Icons.add_box,
+                        const Color(0xFF10B981),
+                        Colors.white,
+                      ),
+                    if (simulation['totalServices'] > 0)
+                      _buildResultCard(
+                        'Services',
+                        simulation['totalServices'],
+                        Icons.miscellaneous_services,
+                        const Color(0xFFF59E0B),
+                        Colors.white,
+                      ),
                   ],
                 ),
                 const SizedBox(height: 30),
@@ -694,19 +751,46 @@ class _CatalogPageState extends State<CatalogPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color.fromRGBO(0, 61, 112, 1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: selectedItem?.imageBytes != null
+                  ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  selectedItem!.imageBytes!,
+                  fit: BoxFit.cover,
+                ),
+              )
+                  : Icon(
+                Icons.image_not_supported_outlined,
+                size: 60,
+                color: Colors.grey[500],
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
-              selectedItem!.name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
+              selectedItem?.name ?? '',
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E3A8A)
+              ),
             ),
             const SizedBox(height: 6),
             Chip(
-              label: Text(selectedItem!.category),
+              label: Text(selectedItem?.category ?? ''),
               backgroundColor: const Color(0xFFDBEAFE),
               labelStyle: const TextStyle(color: Color(0xFF2563EB)),
             ),
             const SizedBox(height: 12),
             Text(
-              selectedItem!.description,
+              selectedItem?.description ?? '',
               style: const TextStyle(fontSize: 14, color: Color(0xFF1E40AF)),
             ),
             const SizedBox(height: 16),
@@ -718,8 +802,12 @@ class _CatalogPageState extends State<CatalogPage> {
               ),
               alignment: Alignment.center,
               child: Text(
-                '${formatPrice(selectedItem!.price)} €',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
+                '${formatPrice(selectedItem?.price ?? 0)} €',
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2563EB)
+                ),
               ),
             ),
           ],
@@ -762,18 +850,32 @@ class _CatalogPageState extends State<CatalogPage> {
               onChanged: (value) => setState(() => downPayment = double.tryParse(value) ?? 0),
             ),
             const SizedBox(height: 16),
-            _buildSlider(
-              label: 'Valeur résiduelle',
-              value: residualValue,
-              min: 0,
-              max: 50,
-              divisions: 10,
-              displayValue: '${residualValue.toInt()} %',
-              onChanged: (val) => setState(() => residualValue = val),
-            ),
+
+            // Section des options additionnelles
+            if (selectedItem?.options.isNotEmpty ?? false) ...[
+              const SizedBox(height: 20),
+              const Text('Options additionnelles',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+              const SizedBox(height: 12),
+              for (int i = 0; i < selectedItem!.options.length; i++)
+                CheckboxListTile(
+                  title: Text(selectedItem!.options[i].optlabel),
+                  subtitle: Text("Prix: ${selectedItem!.options[i].optprice} €"),
+                  value: selectedOptionsCheckbox[i],
+                  onChanged: (val) {
+                    setState(() {
+                      selectedOptionsCheckbox[i] = val ?? false;
+                      selectedOptions = [
+                        for (int j = 0; j < selectedItem!.options.length; j++)
+                          if (selectedOptionsCheckbox[j]) selectedItem!.options[j],
+                      ];
+                    });
+                  },
+                ),
+            ],
 
             // Section des services additionnels
-            if (selectedItem!.services.isNotEmpty) ...[
+            if (selectedItem?.services.isNotEmpty ?? false) ...[
               const SizedBox(height: 20),
               const Text('Services additionnels',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
@@ -921,12 +1023,27 @@ class CatalogDetailPage extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                    Expanded(flex: 3, child: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E3A8A)))),
-                    Expanded(flex: 5, child: Text(entry.value.toString(), style: const TextStyle(color: Colors.black87))),
+                      Expanded(flex: 3, child: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E3A8A)))),
+                      Expanded(flex: 5, child: Text(entry.value.toString(), style: const TextStyle(color: Colors.black87))),
                     ],
                   ),
                 ),
               ),
+            ],
+            const SizedBox(height: 24),
+            if (item.options.isNotEmpty) ...[
+              const Text('Options disponibles', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
+              const SizedBox(height: 12),
+              ...item.options.map((option) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Card(
+                  elevation: 1,
+                  child: ListTile(
+                    title: Text(option.optlabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Prix: ${option.optprice} €'),
+                  ),
+                ),
+              )),
             ],
             const SizedBox(height: 24),
             if (item.services.isNotEmpty) ...[

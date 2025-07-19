@@ -14,13 +14,13 @@ class CatalogRepository extends AppRepository {
       final response = await dio.get(
         'https://demo-backend-utina.teamwill-digital.com/assetconfig-service/api/prGetAssetCatalogByKeyword',
         queryParameters: {
-          'currcode': 'MAD',
+          'currcode': 'EUR',
           'filters': '',
           'flagwebshop': false,
           'keyword': '',
           'mcid': 0,
           'mgid': 6,
-          'networkcode': 'SCANNIA',
+          'networkcode': 'PEUGEOT',
           'tpidbroker': 0,
           'tpidmanufacturer': '',
         },

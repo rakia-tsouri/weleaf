@@ -12,61 +12,38 @@ class ProposalsRepository extends AppRepository {
   Future<ApiResponse<ProposalListResponse>> getProposalsList({
     int offset = 0,
     int limit = 10,
-    String clientname = 'R',
     String? status,
-    int? branchid,
-    String? brokername,
-
-    String? ctphase,
-    String? ctreference,
-    String? ctstatus,
-    String? datemin,
-    String? datemax,
-    bool? flagPropWithCtreference,
-    int? marketingid,
-    int? mfid,
-    String? network,
-    int? offerid,
-    String? prcode,
-    String? propreference,
-    int? tpauthdetailid,
-    int? tpauthid,
-    int? tpidbroker,
-    int? tpidclient,
-    String? tprefbroker,
-    String? tpreference,
   }) async {
     try {
       final response = await dioWithToken.get(
-        'https://demo-backend-utina.teamwill-digital.com/proposal-service/api/proposal',
+        '$_baseUrl/proposal-service/api/proposal',
         queryParameters: {
-          'branchid': 0,
-          'brokername': brokername ?? '',
-          'clientname': clientname ?? '',
-          'ctphase': ctphase ?? '',
-          'ctreference': ctreference ?? '',
-          'ctstatus': ctstatus ?? '',
-          'datemax': datemax ?? '',
-          'datemin': datemin ?? '',
-          'flagPropWithCtreference': flagPropWithCtreference ?? '',
-          'marketingid': marketingid ?? 0,
-          'mfid': mfid ?? '',
-          'network': network ?? '',
-          'offerid': offerid ?? 0,
-          'prcode': prcode ?? '',
-          'propreference': propreference ?? '',
-          'tpauthdetailid': tpauthdetailid ?? '',
-          'tpauthid': tpauthid ?? '',
-          'tpidbroker': tpidbroker ?? 0,
-          'tpidclient': tpidclient ?? '',
-          'tprefbroker': tprefbroker ?? '',
-          'tpreference': tpreference ?? '',
+          'branchid': '',
+          'brokername': '',
+          'clientname': '',
+          'ctphase': '',
+          'ctreference': '',
+          'ctstatus': '',
+          'datemax': '',
+          'datemin': '',
+          'flagPropWithCtreference': 'false',
+          'marketingid': '',
+          'ctstatus': status ?? '',
+          'mfid': 0,
+          'network': '',
+          'offerid': '',
+          'prcode': '',
+          'propreference': '',
+          'tpauthdetailid': 0,
+          'tpauthid': 0,
+          'tpidbroker': '',
+          'tpidclient': 0,
+          'tprefbroker': '',
+          'tpreference': '',
           'offset': offset,
           'limit': limit,
         },
       );
-
-
 
       final proposalsResponse = ProposalListResponse.fromJson(response.data);
 
@@ -91,6 +68,7 @@ class ProposalsRepository extends AppRepository {
       return ApiResponse.error('Failed to load proposals');
     }
   }
+
 
   Future<ApiResponse<ProposalDetailsResponse>> getProposalDetails(String proposalId) async {
     try {
@@ -127,7 +105,7 @@ class ProposalsRepository extends AppRepository {
       String? fileData = response.data['description'];
 
       // Nettoyer la chaîne base64 si nécessaire
-      if (fileData != null && fileData.startsWith('data:image')) {
+      if (fileData != null && fileData.contains(',')) {
         fileData = fileData.split(',').last;
       }
 
