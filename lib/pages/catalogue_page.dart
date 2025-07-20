@@ -678,19 +678,12 @@ class _CatalogPageState extends State<CatalogPage> {
                       const Color(0xFF4F46E5),
                       Colors.white,
                     ),
-                    _buildResultCard(
-                      'Intérêts',
-                      simulation['totalInterest'],
-                      Icons.trending_up,
-                      const Color(0xFF06B6D4),
-                      Colors.white,
-                    ),
                     if (simulation['totalOptions'] > 0)
                       _buildResultCard(
                         'Options',
                         simulation['totalOptions'],
                         Icons.add_box,
-                        const Color(0xFF10B981),
+                        const Color(0xFF06B6D4),
                         Colors.white,
                       ),
                     if (simulation['totalServices'] > 0)
@@ -844,7 +837,7 @@ class _CatalogPageState extends State<CatalogPage> {
                 labelText: 'Apport initial (€)',
                 labelStyle: const TextStyle(color: Color(0xFF1E3A8A)),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: Colors.grey[50],
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
               onChanged: (value) => setState(() => downPayment = double.tryParse(value) ?? 0),

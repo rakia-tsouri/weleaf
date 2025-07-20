@@ -172,9 +172,6 @@ class BienvenuePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-
-
-
             // **Ici on intègre le widget Nos Produits**
             NosProduitsEtStats(),
             const SizedBox(height: 24),
@@ -210,7 +207,7 @@ class BienvenuePage extends StatelessWidget {
                 _buildActionTile(
                   'Payer factures',
                   'Consultez vos factures impayées rapidement',
-                  Icons.payment,
+                  Icons.description,
                   Colors.orange,
                       () {
                         Navigator.push(

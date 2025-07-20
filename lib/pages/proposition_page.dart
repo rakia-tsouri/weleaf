@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/data/models/proposals_list_response.dart';
 import 'package:optorg_mobile/data/repositories/proposal_repository.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'ProposalDetailsScreen.dart';
+import 'package:optorg_mobile/pages/propositions.dart';
 
 class ProposalsPage extends StatefulWidget {
   const ProposalsPage({Key? key}) : super(key: key);
@@ -228,7 +227,7 @@ class _ProposalsPageState extends State<ProposalsPage> {
       backgroundColor: const Color(0xFFF8F9FF),
       appBar: AppBar(
         title: const Text('Mes Propositions'),
-        backgroundColor: const Color(0xFF003D70),
+        backgroundColor: const Color(0xFF2563EB),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
@@ -253,10 +252,13 @@ class _ProposalsPageState extends State<ProposalsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Action à définir : création proposition
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PropositionsPage()),
+          );
         },
-        backgroundColor: const Color(0xFF003D70),
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF2563EB),
+        child: const Icon(Icons.add, color: Colors.white,),
       ),
     );
   }

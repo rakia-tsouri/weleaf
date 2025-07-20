@@ -13,7 +13,7 @@ import 'FacturesPayees.dart';
 import 'FacturesImpayees.dart';
 import 'calculatrice.dart';
 import 'package:optorg_mobile/pages/profil.dart';
-import 'package:optorg_mobile/pages/Notiflist.dart';
+import 'package:optorg_mobile/pages/notification_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
