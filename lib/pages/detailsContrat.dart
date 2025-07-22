@@ -1,7 +1,11 @@
+// pages/detailsContrat.dart
 import 'package:flutter/material.dart';
+import 'package:optorg_mobile/data/models/contract.dart';
 
 class ContractDetailsPage extends StatelessWidget {
-  const ContractDetailsPage({super.key});
+  final Contract contract;
+
+  const ContractDetailsPage({super.key, required this.contract});
 
   @override
   Widget build(BuildContext context) {
@@ -27,31 +31,54 @@ class ContractDetailsPage extends StatelessWidget {
               children: [
                 // Section Informations de base
                 const SectionTitle(title: 'Informations du contrat', icon: Icons.description),
-                const DetailItem(label: 'Référence proposition', value: '0000004562'),
-                const DetailItem(label: 'ID Contrat', value: '4625'),
-                const DetailItem(label: 'Référence contrat', value: '0000002786'),
-                const DetailItem(label: 'Description', value: 'Scania S580'),
-                const DetailItem(label: 'Offre', value: 'Long-term rental offer SC'),
+                DetailItem(label: 'Référence proposition', value: contract.propreference),
+                DetailItem(label: 'ID Contrat', value: contract.ctrid.toString()),
+                DetailItem(label: 'Référence contrat', value: contract.ctreference),
+                DetailItem(label: 'Description', value: contract.ctdescription),
+                DetailItem(label: 'Offre', value: contract.offeridlabel),
 
                 // Section Client
                 const SectionTitle(title: 'Client', icon: Icons.person),
-                const DetailItem(label: 'Nom client', value: 'Ahmed Mahmoud'),
+                DetailItem(label: 'Nom client', value: contract.clientname),
+                DetailItem(label: 'Référence client', value: contract.clientreference),
 
                 // Section Statut
-                const SectionTitle(title: 'Statut', icon: Icons.notifications_active), // a changer
-                const DetailItem(label: 'Statut', value: 'ACTIVE'),
-                const DetailItem(label: 'Date statut', value: '18/06/2025'),
+                const SectionTitle(title: 'Statut', icon: Icons.notifications_active),
+                DetailItem(label: 'Statut', value: contract.statuslabel),
+                if (contract.ctactivationdate != null)
+                  DetailItem(
+                      label: 'Date activation',
+                      value: '${contract.ctactivationdate!.day}/${contract.ctactivationdate!.month}/${contract.ctactivationdate!.year}'
+                  ),
 
                 // Section Période
                 const SectionTitle(title: 'Période', icon: Icons.calendar_today),
-                const DetailItem(label: 'Date début', value: '18/06/2025'),
-                const DetailItem(label: 'Date fin', value: '25/06/2028'),
-                const DetailItem(label: 'Durée (mois)', value: '36'),
+                DetailItem(label: 'Date début', value: contract.ctestartdate),
+                DetailItem(label: 'Date fin', value: contract.cteenddate),
+                DetailItem(label: 'Durée (mois)', value: contract.cteduration.toString()),
 
                 // Section Paiement
                 const SectionTitle(title: 'Paiement', icon: Icons.payment),
-                const DetailItem(label: 'Premier paiement', value: '7 310,00 MAD'),
-                const DetailItem(label: 'Loyer mensuel', value: '22 131,57 MAD'),
+                DetailItem(
+                    label: 'Premier paiement',
+                    value: '${contract.ctefirstpayment.toStringAsFixed(2)} ${contract.currcode}'
+                ),
+                DetailItem(
+                    label: 'Loyer mensuel',
+                    value: '${contract.cterentalamount.toStringAsFixed(2)} ${contract.currcode}'
+                ),
+                DetailItem(
+                    label: 'Montant financé',
+                    value: '${contract.ctfinancedamount.toStringAsFixed(2)} ${contract.currcode}'
+                ),
+                DetailItem(
+                    label: 'Valeur résiduelle',
+                    value: '${contract.ctervamount.toStringAsFixed(2)} ${contract.currcode}'
+                ),
+                DetailItem(
+                    label: 'Taux nominal',
+                    value: '${contract.ctenominalrate.toStringAsFixed(2)}%'
+                ),
               ],
             ),
           ),

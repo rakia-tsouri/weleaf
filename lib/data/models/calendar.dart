@@ -1,16 +1,16 @@
-class Calendar {
+class calendar {
   final int calid;
   final String callabel;
   final String countcode;
 
-  Calendar({
+  calendar({
     required this.calid,
     required this.callabel,
     required this.countcode,
   });
 
-  factory Calendar.fromJson(Map<String, dynamic> json) {
-    return Calendar(
+  factory calendar.fromJson(Map<String, dynamic> json) {
+    return calendar(
       calid: json['calid'],
       callabel: json['callabel'],
       countcode: json['countcode'] ?? '',

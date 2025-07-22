@@ -126,10 +126,12 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
   }
 
   String formatPrice(int price) {
-    return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]} ',
-    );
+    // Convert price to Euros (assuming 1 EUR = 10.8 MAD for example)
+    // You should replace this with your actual conversion rate
+    double priceInEuros = price / 10.8;
+
+    // Format the price with 2 decimal places and Euro symbol
+    return '${priceInEuros.toStringAsFixed(2)} €';
   }
 
   @override
@@ -279,7 +281,7 @@ class _CatalogueCarouselState extends State<CatalogueCarousel> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'À partir de ${formatPrice(item.price)} MAD',
+                                'À partir de ${formatPrice(item.price)}', // Updated to use Euros
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 14,

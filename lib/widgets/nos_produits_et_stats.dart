@@ -1,15 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:optorg_mobile/widgets/CatalogueCarousel.dart'; // Importer ton widget carousel
+import 'package:optorg_mobile/data/repositories/contract_repository.dart';
+import 'package:optorg_mobile/widgets/CatalogueCarousel.dart';
 
-class NosProduitsEtStats extends StatelessWidget {
+class NosProduitsEtStats extends StatefulWidget {
   const NosProduitsEtStats({Key? key}) : super(key: key);
+
+  @override
+  _NosProduitsEtStatsState createState() => _NosProduitsEtStatsState();
+}
+
+class _NosProduitsEtStatsState extends State<NosProduitsEtStats> {
+  final ContractRepository _contractRepository = ContractRepository();
+  int _activeContractsCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveContracts();
+  }
+
+  Future<void> _loadActiveContracts() async {
+    try {
+      final contracts = await _contractRepository.fetchContracts();
+      setState(() {
+        _activeContractsCount = contracts.length;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Vous pourriez afficher une snackbar ou un message d'erreur ici si besoin
+      debugPrint('Erreur lors du chargement des contrats: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CatalogueCarousel(), // On utilise ton widget réutilisable
+        CatalogueCarousel(),
         const SizedBox(height: 32),
         const Text(
           'Aperçu rapide',
@@ -22,9 +54,14 @@ class NosProduitsEtStats extends StatelessWidget {
           crossAxisCount: 2,
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
-          childAspectRatio: 1.7, // Ajustez ce ratio selon vos besoins
+          childAspectRatio: 1.7,
           children: [
-            _buildStatCard('Contrats actifs', '156', Icons.description, Colors.green),
+            _buildStatCard(
+              'Contrats actifs',
+              _isLoading ? '' : _activeContractsCount.toString(),
+              Icons.description,
+              Colors.green,
+            ),
             _buildStatCard('Factures en attente', '23', Icons.receipt, Colors.orange),
             _buildStatCard('Montant total', '12 €', Icons.euro, Colors.blue),
             _buildStatCard('Impayés', '89 €', Icons.warning, Colors.red),
@@ -37,7 +74,7 @@ class NosProduitsEtStats extends StatelessWidget {
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Reduced vertical padding
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,7 +87,7 @@ class NosProduitsEtStats extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   value,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,

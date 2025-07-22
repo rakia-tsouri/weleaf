@@ -26,8 +26,8 @@ class AppRepository {
   AppRepository() {
     BaseOptions options = BaseOptions(
         followRedirects: false,
-        connectTimeout: const Duration(seconds: 20),
-        receiveTimeout: const Duration(seconds: 20),
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
         baseUrl: API_BASE_URL);
     dio.options = options;
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));

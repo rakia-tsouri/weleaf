@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:optorg_mobile/data/models/Calendar.dart';
-import 'package:optorg_mobile/services/calendar_service.dart';
+import 'package:optorg_mobile/data/models/calendar.dart';
+import 'package:optorg_mobile/data/repositories/calendar_repository.dart';
 import 'package:optorg_mobile/data/repositories/product_repository.dart';
 
 class SimulateurForm extends StatefulWidget {
@@ -11,7 +11,7 @@ class SimulateurForm extends StatefulWidget {
 }
 
 class _SimulateurFormState extends State<SimulateurForm> {
-  List<Calendar> _calendars = [];
+  List<calendar> _calendars = [];
   int? _selectedCalendarId;
   bool _isLoading = false;
   late BuildContext _context;
@@ -19,6 +19,7 @@ class _SimulateurFormState extends State<SimulateurForm> {
   List<Map<String, dynamic>> _products = [];
   String? _selectedProduct;
   final ProductRepository _productRepository = ProductRepository();
+  final CalendarRepository _calendarRepository = CalendarRepository();
 
   @override
   void initState() {
@@ -50,10 +51,9 @@ class _SimulateurFormState extends State<SimulateurForm> {
   Future<void> _loadCalendars() async {
     setState(() => _isLoading = true);
     try {
-      final calendars = await CalendarService.fetchCalendars();
+      final calendars = await _calendarRepository.fetchCalendars();
       setState(() {
         _calendars = calendars;
-        // Sélectionnez le premier calendrier par défaut si disponible
         _selectedCalendarId = calendars.isNotEmpty ? calendars.first.calid : null;
         _isLoading = false;
       });

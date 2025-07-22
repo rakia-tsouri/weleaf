@@ -1,197 +1,205 @@
 import 'package:flutter/material.dart';
-import 'detailsContrat.dart';
+import 'package:optorg_mobile/data/models/contract.dart';
+import 'package:optorg_mobile/data/repositories/contract_repository.dart';
+import 'package:optorg_mobile/widgets/contract_card.dart';
 
-class ListContratsPage extends StatelessWidget {
+class ListContratsPage extends StatefulWidget {
   const ListContratsPage({super.key});
+
+  @override
+  State<ListContratsPage> createState() => _ListContratsPageState();
+}
+
+class _ListContratsPageState extends State<ListContratsPage> {
+  late Future<List<Contract>> futureContracts;
+  final ContractRepository _repository = ContractRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContracts();
+  }
+
+  Future<void> _loadContracts() async {
+    setState(() {
+      futureContracts = _repository.fetchContracts();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Mes Contrats'),
+        title: const Text(
+          'Mes Contrats',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            color: Colors.black87,
+          ),
+        ),
+        centerTitle: false,
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+        elevation: 0.5,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black54),
+            onPressed: _loadContracts,
+            tooltip: 'Rafraîchir',
+          ),
+        ],
       ),
-      body: const Padding(padding: EdgeInsets.all(16), child: ContractsList()),
-    );
-  }
-}
-
-class ContractsList extends StatelessWidget {
-  const ContractsList({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      children: const [
-        ContractCard(
-          title: 'BMW X3 2023',
-          contractNumber: '#LC001',
-          monthly: '850€',
-          remaining: '24',
-          start: '15/06/2023',
-          end: '15/06/2026',
-        ),
-        SizedBox(height: 16),
-        ContractCard(
-          title: 'Audi A4 2022',
-          contractNumber: '#LC002',
-          monthly: '700€',
-          remaining: '18',
-          start: '01/01/2023',
-          end: '01/07/2025',
-        ),
-      ],
-    );
-  }
-}
-
-class ContractCard extends StatelessWidget {
-  final String title;
-  final String contractNumber;
-  final String monthly;
-  final String remaining;
-  final String start;
-  final String end;
-
-  const ContractCard({
-    super.key,
-    required this.title,
-    required this.contractNumber,
-    required this.monthly,
-    required this.remaining,
-    required this.start,
-    required this.end,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Titre + icône
-            Row(
-              children: [
-                const Icon(Icons.directions_car, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(contractNumber, style: TextStyle(color: Colors.grey[800])),
-            const SizedBox(height: 16),
-
-            // Mensualité & Échéances
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: FutureBuilder<List<Contract>>(
+          future: futureContracts,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        'Mensualité',
-                        style: TextStyle(color: Colors.grey),
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.blue,
+                        ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 16),
                       Text(
-                        monthly,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        'Chargement des contrats...',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Échéances restantes',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        remaining,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Début & Fin
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Début', style: TextStyle(color: Colors.grey)),
-                      const SizedBox(height: 4),
-                      Text(
-                        start,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Fin', style: TextStyle(color: Colors.grey)),
-                      const SizedBox(height: 4),
-                      Text(
-                        end,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Bouton Voir les détails
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ContractDetailsPage(),
+                    ]),
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 48,
                     ),
-                  );
-                },
-                icon: const Icon(Icons.visibility, color: Colors.black),
-                label: const Text(
-                  'Voir les détails',
-                  style: TextStyle(color: Colors.black),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Une erreur est survenue',
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: 160,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: _loadContracts,
+                        child: const Text(
+                          'Réessayer',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.grey[400]!),
-                  foregroundColor: Colors.black,
+              );
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/empty_state.png',
+                      width: 120,
+                      color: Colors.grey[300],
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Aucun contrat disponible',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Commencez par créer un nouveau contrat',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: 200,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () {
+                          // Add navigation to create new contract
+                        },
+                        child: const Text(
+                          'Créer un contrat',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-          ],
+              );
+            } else {
+              return RefreshIndicator(
+                color: Colors.blue,
+                displacement: 40,
+                onRefresh: _loadContracts,
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: snapshot.data!.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final contract = snapshot.data![index];
+                    return ContractCard(contract: contract);
+                  },
+                ),
+              );
+            }
+          },
         ),
       ),
     );
