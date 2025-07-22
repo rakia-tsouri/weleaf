@@ -9,11 +9,11 @@ import 'package:optorg_mobile/widgets/app_dialog.dart';
 import 'package:optorg_mobile/widgets/custom_popup_bottom_sheet.dart';
 import 'catalogue_page.dart';
 import 'listContrats.dart';
-import 'FacturesPayees.dart';
-import 'FacturesImpayees.dart';
+import 'package:optorg_mobile/pages/facturePage.dart';
 import 'calculatrice.dart';
 import 'package:optorg_mobile/pages/profil.dart';
 import 'package:optorg_mobile/pages/notification_page.dart';
+import 'package:optorg_mobile/data/repositories/facture_repository.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,17 +25,20 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
+  final FactureRepository _factureRepo = FactureRepository(); // No baseUrl needed now
+  late final List<Widget> _pages = [
     const BienvenuePage(),
     const CatalogPage(),
     const ProposalsPage(),
-    const ListContratsPage(),  // Page corrigée
-    FacturesPage(),
-    CalculatricePage(),
+    const ListContratsPage(),
+    FacturesPage(
+      factureRepository: _factureRepo,
+    ),
+     CalculatricePage(), // Only if CalculatricePage has const constructor
   ];
 
   final List<NavigationItem> _navigationItems = [
-    NavigationItem(icon: Icons.home, label: 'Acceuil', color: Colors.blue),
+    NavigationItem(icon: Icons.home, label: 'Accueil', color: Colors.blue),
     NavigationItem(icon: Icons.grid_view, label: 'Catalogue', color: Colors.indigo),
     NavigationItem(icon: Icons.description, label: 'Propositions', color: Colors.indigo),
     NavigationItem(icon: Icons.assignment, label: 'Contrats', color: Colors.indigo),
@@ -92,11 +95,10 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color:Color(0xFF2563EB)),
+              decoration: BoxDecoration(color: Color(0xFF2563EB)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   SizedBox(height: 10),
                   Text(
                     'Weleaf',
@@ -136,8 +138,8 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('Déconnexion'),
               onTap: () {
-                Navigator.pop(context); // Fermer le Drawer
-                _onLogoutClick(); // Afficher la confirmation
+                Navigator.pop(context);
+                _onLogoutClick();
               },
             ),
           ],
@@ -191,49 +193,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class FacturesPage extends StatelessWidget {
-  const FacturesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          toolbarHeight: 10, // Optimal height for larger tabs
-          titleSpacing: 0,
-          bottom: TabBar(
-            labelStyle: TextStyle(
-              fontSize: 18, // Increased from default 14
-              fontWeight: FontWeight.w500,
-            ),
-            unselectedLabelStyle: TextStyle(
-              fontSize: 18, // Same size for both states
-              fontWeight: FontWeight.w500,
-            ),
-            labelColor: const Color(0xFF2563EB),
-            unselectedLabelColor: Colors.grey[600],
-            indicatorColor: const Color(0xFF2563EB),
-            indicatorWeight: 3,
-            tabs: const [
-              Tab(text: 'Payées'),
-              Tab(text: 'Impayées'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            FacturesPayeesPage(),
-            FacturesImpayeesPage(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class NavigationItem {
   final IconData icon;
   final String label;
@@ -245,4 +204,3 @@ class NavigationItem {
     required this.color,
   });
 }
-

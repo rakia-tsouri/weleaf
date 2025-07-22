@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/data/repositories/contract_repository.dart';
+import 'package:optorg_mobile/data/models/contract.dart';
 import 'package:optorg_mobile/widgets/CatalogueCarousel.dart';
+import 'package:optorg_mobile/data/repositories/facture_repository.dart';
+import 'package:optorg_mobile/data/models/facture_model.dart';
 
 class NosProduitsEtStats extends StatefulWidget {
   const NosProduitsEtStats({Key? key}) : super(key: key);
@@ -11,28 +14,39 @@ class NosProduitsEtStats extends StatefulWidget {
 
 class _NosProduitsEtStatsState extends State<NosProduitsEtStats> {
   final ContractRepository _contractRepository = ContractRepository();
+  final FactureRepository _factureRepository = FactureRepository();
+
   int _activeContractsCount = 0;
+  int _pendingInvoicesCount = 0; // Nouveau compteur pour les factures en attente
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadActiveContracts();
+    _loadData();
   }
 
-  Future<void> _loadActiveContracts() async {
+  Future<void> _loadData() async {
     try {
-      final contracts = await _contractRepository.fetchContracts();
+      // Charge les données en parallèle
+      final results = await Future.wait([
+        _contractRepository.fetchContracts(),
+        _factureRepository.fetchFactures(),
+      ]);
+
+      final contracts = results[0] as List<Contract>;
+      final factures = results[1] as List<Facture>;
+
       setState(() {
         _activeContractsCount = contracts.length;
+        _pendingInvoicesCount = factures.where((f) => f.cistatus == 'INPROG').length;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      // Vous pourriez afficher une snackbar ou un message d'erreur ici si besoin
-      debugPrint('Erreur lors du chargement des contrats: $e');
+      debugPrint('Erreur lors du chargement des données: $e');
     }
   }
 
@@ -58,11 +72,16 @@ class _NosProduitsEtStatsState extends State<NosProduitsEtStats> {
           children: [
             _buildStatCard(
               'Contrats actifs',
-              _isLoading ? '' : _activeContractsCount.toString(),
+              _isLoading ? '-' : _activeContractsCount.toString(),
               Icons.description,
               Colors.green,
             ),
-            _buildStatCard('Factures en attente', '23', Icons.receipt, Colors.orange),
+            _buildStatCard(
+              'Factures en attente',
+              _isLoading ? '-' : _pendingInvoicesCount.toString(),
+              Icons.receipt,
+              Colors.orange,
+            ),
             _buildStatCard('Montant total', '12 €', Icons.euro, Colors.blue),
             _buildStatCard('Impayés', '89 €', Icons.warning, Colors.red),
           ],

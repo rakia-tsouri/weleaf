@@ -212,7 +212,7 @@ class BienvenuePage extends StatelessWidget {
                       () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => FacturesImpayeesPage()),
+                          MaterialPageRoute(builder: (context) => FacturesImpayeesPage(factures: [])),
                         );
                       },
                 ),
