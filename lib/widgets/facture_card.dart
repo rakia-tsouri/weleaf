@@ -99,7 +99,7 @@ class FactureCard extends StatelessWidget {
               Expanded(
                 child: _buildInfoItem(
                   label: 'Montant',
-                  value: '${facture.cigrosstotal} ${facture.currcode ?? 'EUR'}',
+                  value: '${facture.cigrosstotal} ${facture.currcode ?? '€'}',
                   isBold: true,
                 ),
               ),
