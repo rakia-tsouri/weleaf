@@ -25,8 +25,8 @@ class FacturesPayeesPage extends StatelessWidget {
           final facture = factures[index];
           return FactureCard(
             facture: facture,
-            onVoirPressed: () => _showFactureDetails(context, facture),
             onDownloadPressed: () => _downloadFacture(facture),
+            // The "Voir" action is already handled internally in FactureCard
           );
         },
       ),
