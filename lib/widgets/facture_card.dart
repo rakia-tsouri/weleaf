@@ -363,26 +363,6 @@ class _FactureCardState extends State<FactureCard>
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: widget.onActionPressed,
-              icon: Icon(
-                isEnRetard ? Icons.payment_rounded : Icons.schedule_rounded,
-                size: 18,
-              ),
-              label: Text(
-                isEnRetard ? 'Payer maintenant' : 'Programmer le paiement',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                backgroundColor:
-                isEnRetard ? Colors.red.shade600 : Colors.orange.shade600,
-                foregroundColor: Colors.white,
-              ),
-            ),
           ),
         ],
       ],

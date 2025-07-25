@@ -92,17 +92,8 @@ class _CalculatricePageState extends State<CalculatricePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Titre SIMULATEUR
-            Text(
-              'SIMULATEUR',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 10),
 
             // Montant financé
             _buildSliderField(

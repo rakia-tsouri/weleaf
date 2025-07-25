@@ -1,67 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/constants/strings.dart';
 import 'package:optorg_mobile/constants/colors.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:optorg_mobile/utils/app_data_store.dart'; // Importer AppDataStore
-import 'package:optorg_mobile/data/repositories/auth_repository.dart';
-
-// Modèle de données pour la réponse API
-class UserProfile {
-  final String username;
-  final String name;
-  final String surname;
-  final String email;
-  final String lancode;
-  final String userrole;
-  final int mgid;
-  final String status;
-  final bool locked;
-  final String phone;
-  final String mobile;
-  final bool changepassword;
-  final String route;
-  final String usertype;
-  final String tabposition;
-
-  UserProfile({
-    required this.username,
-    required this.name,
-    required this.surname,
-    required this.email,
-    required this.lancode,
-    required this.userrole,
-    required this.mgid,
-    required this.status,
-    required this.locked,
-    required this.phone,
-    required this.mobile,
-    required this.changepassword,
-    required this.route,
-    required this.usertype,
-    required this.tabposition,
-  });
-
-  factory UserProfile.fromJson(Map<String, dynamic> json) {
-    return UserProfile(
-      username: json['username'] ?? '',
-      name: json['name'] ?? '',
-      surname: json['surname'] ?? '',
-      email: json['email'] ?? '',
-      lancode: json['lancode'] ?? '',
-      userrole: json['userrole'] ?? '',
-      mgid: json['mgid'] ?? 0,
-      status: json['status'] ?? '',
-      locked: json['locked'] ?? false,
-      phone: json['phone'] ?? '',
-      mobile: json['mobile'] ?? '',
-      changepassword: json['changepassword'] ?? false,
-      route: json['route'] ?? '',
-      usertype: json['usertype'] ?? '',
-      tabposition: json['tabposition'] ?? '',
-    );
-  }
-}
+import 'package:optorg_mobile/data/models/user.dart';
+import 'package:optorg_mobile/data/repositories/user_repository.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -72,6 +13,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
+  final UserRepository _userRepository = UserRepository();
 
   // Controllers pour les champs de texte
   final _nameController = TextEditingController();
@@ -80,15 +22,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final _mobileController = TextEditingController();
 
   // Variables pour gérer l'état
-  UserProfile? _userProfile;
+  User? _user;
   bool _isLoading = true;
   String? _errorMessage;
-  String? _authToken;
 
   @override
   void initState() {
     super.initState();
-    _initializeAndLoadProfile();
+    _loadUserProfile();
   }
 
   @override
@@ -100,99 +41,94 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // Fonction pour initialiser le token et charger le profil
-  Future<void> _initializeAndLoadProfile() async {
-    await _getAuthToken();
-    await _loadUserProfile();
-  }
+  /// Load user profile using repository
+  Future<void> _loadUserProfile() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-  // Fonction pour récupérer le token depuis AppDataStore
-  Future<void> _getAuthToken() async {
     try {
-      print('🔍 Début de la récupération du token depuis AppDataStore...');
+      _user = await _userRepository.getCurrentUserProfile();
 
-      final appStorage = AppDataStore();
-      _authToken = await appStorage.getToken(); // Utiliser AppDataStore
+      if (_user?.data != null) {
+        // Populate form controllers with user data
+        _nameController.text = _user!.data!.name ?? '';
+        _userNameController.text = _user!.data!.username ?? '';
+        _phoneController.text = _user!.data!.phone ?? '';
+        _mobileController.text = _user!.data!.mobile ?? '';
 
-      if (_authToken != null && _authToken!.isNotEmpty) {
-        print('✅ Token récupéré depuis AppDataStore: ${_authToken!.substring(0, 20)}...');
+        setState(() {
+          _isLoading = false;
+        });
       } else {
-        print('❌ Aucun token trouvé dans AppDataStore');
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Impossible de charger le profil utilisateur';
+        });
       }
-
     } catch (e) {
-      print('❌ Erreur lors de la récupération du token: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString().contains('Token')
+            ? 'Token d\'authentification invalide. Veuillez vous reconnecter.'
+            : 'Erreur de connexion: $e';
+      });
     }
   }
 
-  // Fonction pour appeler l'API avec le token
-  Future<void> _loadUserProfile() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+  /// Save profile using repository
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      print('🌐 Début de l\'appel API...');
+    if (_user?.data != null) {
+      // Update user data with form values
+      _user!.data!.name = _nameController.text;
+      _user!.data!.username = _userNameController.text;
+      _user!.data!.phone = _phoneController.text;
+      _user!.data!.mobile = _mobileController.text;
 
-      // Vérifier si on a un token
-      if (_authToken == null || _authToken!.isEmpty) {
-        print('❌ Token manquant ou vide');
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Token d\'authentification manquant. Veuillez vous reconnecter.';
-        });
-        return;
-      }
-
-      print('🔐 Utilisation du token: ${_authToken!.substring(0, 20)}...');
-
-      final response = await http.get(
-        Uri.parse('https://demo-backend-utina.teamwill-digital.com/authentication-service/authenticate/me'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_authToken',
-        },
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
 
-      print('📡 Réponse API: ${response.statusCode}');
-      print('📄 Corps de la réponse: ${response.body}');
+      try {
+        bool success = await _userRepository.updateUserProfile(_user!);
 
-      if (response.statusCode == 200) {
-        print('✅ Succès de l\'API');
-        final Map<String, dynamic> data = json.decode(response.body);
-        print('📊 Données reçues: $data');
+        Navigator.of(context).pop(); // Close loading dialog
 
-        _userProfile = UserProfile.fromJson(data);
-
-        // Mettre à jour les controllers avec les données de l'API
-        _nameController.text = _userProfile!.name;
-        _userNameController.text = _userProfile!.username;
-        _phoneController.text = _userProfile!.phone;
-        _mobileController.text = _userProfile!.mobile;
-
-        setState(() {
-          _isLoading = false;
-        });
-      } else if (response.statusCode == 401) {
-        print('❌ Erreur 401: Token invalide ou expiré');
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Token d\'authentification invalide ou expiré. Veuillez vous reconnecter.';
-        });
-      } else {
-        print('❌ Erreur ${response.statusCode}: ${response.body}');
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Erreur lors du chargement du profil: ${response.statusCode}';
-        });
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profil sauvegardé avec succès!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erreur lors de la sauvegarde'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
-    } catch (e) {
-      print('❌ Exception lors de l\'appel API: $e');
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Erreur de connexion: $e';
-      });
     }
   }
 
@@ -217,9 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 // Header avec boutons
                 _buildHeader(isSmallScreen),
-
                 SizedBox(height: isSmallScreen ? 24 : 40),
-
                 // Formulaire
                 Expanded(
                   child: SingleChildScrollView(
@@ -230,26 +164,20 @@ class _ProfilePageState extends State<ProfilePage> {
                           'Nom Complet',
                           _nameController,
                         ),
-
                         const SizedBox(height: 20),
-
                         // Champ User Name
                         _buildTextField(
                           'Nom Utilisateur',
                           _userNameController,
                         ),
-
                         const SizedBox(height: 20),
-
                         // Champ Phone
                         _buildTextField(
                           'Téléphone',
                           _phoneController,
                           keyboardType: TextInputType.phone,
                         ),
-
                         const SizedBox(height: 20),
-
                         // Champ Mobile
                         _buildTextField(
                           'Mobile',
@@ -257,9 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           hintText: 'Mobile',
                           keyboardType: TextInputType.phone,
                         ),
-
                         const SizedBox(height: 40),
-
                         // Bouton Save sous les champs
                         SizedBox(
                           width: 200,
@@ -314,7 +240,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: _initializeAndLoadProfile,
+            onPressed: _loadUserProfile,
             icon: const Icon(Icons.refresh),
             label: const Text('Réessayer'),
             style: ElevatedButton.styleFrom(
@@ -329,10 +255,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildHeader(bool isSmallScreen) {
     if (isSmallScreen) {
-      // Layout mobile : tout en vertical
       return Column(
         children: [
-          // Nouvelle ligne avec le titre "Compte"
           Row(
             children: [
               IconButton(
@@ -340,7 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: const Icon(Icons.arrow_back),
                 iconSize: 24,
               ),
-              const SizedBox(width: 8), // petit espace entre l'icône et le texte
+              const SizedBox(width: 8),
               const Text(
                 'Compte',
                 style: TextStyle(
@@ -350,11 +274,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ],
           ),
-
-
           const SizedBox(height: 20),
-
-          // Avatar et infos (reste inchangé)
           Column(
             children: [
               Container(
@@ -372,7 +292,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 16),
               Text(
-                _userProfile?.surname ?? appName,
+                _user?.data?.surname ?? appName,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -381,7 +301,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 8),
               Text(
-                _userProfile?.email ?? 'Email non disponible',
+                _user?.data?.email ?? 'Email non disponible',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[700],
@@ -393,7 +313,6 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       );
     } else {
-      // Layout desktop : horizontal
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -429,7 +348,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _userProfile?.surname ?? appName,
+                    _user?.data?.surname ?? appName,
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -438,7 +357,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _userProfile?.email ?? 'Email non disponible',
+                    _user?.data?.email ?? 'Email non disponible',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -475,7 +394,7 @@ class _ProfilePageState extends State<ProfilePage> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          readOnly: true,
+          readOnly: false, // Made editable for profile updates
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(color: Colors.grey[400]),
@@ -507,18 +426,5 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ],
     );
-  }
-
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      // Logique de sauvegarde
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil sauvegardé avec succès!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
   }
 }
