@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/widgets/nos_produits_et_stats.dart';
 import 'package:optorg_mobile/pages/propositions.dart';
-import 'package:optorg_mobile/pages/FacturesImpayees.dart';
 
 
 // Ton widget CatalogueCarousel
@@ -201,20 +200,6 @@ class BienvenuePage extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => PropositionsPage()),
                     );
                   },
-                ),
-
-
-                _buildActionTile(
-                  'Payer factures',
-                  'Consultez vos factures impayées rapidement',
-                  Icons.description,
-                  Colors.orange,
-                      () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => FacturesImpayeesPage(factures: [])),
-                        );
-                      },
                 ),
               ],
             ),

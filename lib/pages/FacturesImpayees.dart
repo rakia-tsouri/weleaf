@@ -1,4 +1,3 @@
-// pages/factures_impayees_page.dart
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/data/models/facture_model.dart';
 import 'package:optorg_mobile/widgets/facture_card.dart';
@@ -25,8 +24,6 @@ class FacturesImpayeesPage extends StatelessWidget {
           final facture = factures[index];
           return FactureCard(
             facture: facture,
-            onDownloadPressed: () => _downloadFacture(facture),
-            onActionPressed: () => _handlePaymentAction(context, facture),
             // The "Voir" action is already handled internally in FactureCard
           );
         },
@@ -34,39 +31,7 @@ class FacturesImpayeesPage extends StatelessWidget {
     );
   }
 
-  void _showFactureDetails(BuildContext context, Facture facture) {
-    // Implémentez la navigation vers les détails
-  }
-
   void _downloadFacture(Facture facture) {
     // Implémentez le téléchargement
-  }
-
-  void _handlePaymentAction(BuildContext context, Facture facture) {
-    final isEnRetard = facture.cistatus == 'INPROG' &&
-        facture.cidocdate.isBefore(DateTime.now());
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isEnRetard ? 'Paiement' : 'Programmer paiement'),
-        content: Text(isEnRetard
-            ? 'Voulez-vous payer cette facture maintenant?'
-            : 'Voulez-vous programmer le paiement de cette facture?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Implémentez la logique de paiement
-            },
-            child: Text(isEnRetard ? 'Payer' : 'Programmer'),
-          ),
-        ],
-      ),
-    );
   }
 }

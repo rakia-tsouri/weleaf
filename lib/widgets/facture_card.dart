@@ -4,13 +4,11 @@ import 'package:optorg_mobile/pages/FactureDetailsPage.dart';
 
 class FactureCard extends StatefulWidget {
   final Facture facture;
-  final VoidCallback? onDownloadPressed;
   final VoidCallback? onActionPressed;
 
   const FactureCard({
     super.key,
     required this.facture,
-    this.onDownloadPressed,
     this.onActionPressed,
   });
 
@@ -64,12 +62,8 @@ class _FactureCardState extends State<FactureCard>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
-
-    final isPayee = widget.facture.cistatus == 'VALID';
-    final isEnRetard = widget.facture.cistatus == 'INPROG' &&
-        widget.facture.cidocdate.isBefore(DateTime.now());
+    final colorScheme = theme.colorScheme;
 
     return AnimatedBuilder(
       animation: _scaleAnimation,
@@ -79,16 +73,11 @@ class _FactureCardState extends State<FactureCard>
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: colorScheme.outline.withOpacity(0.2),
-                width: 1,
-              ),
               boxShadow: [
                 BoxShadow(
                   color: isDarkMode
-                      ? Colors.black.withOpacity(0.4)
+                      ? Colors.black.withOpacity(0.3)
                       : Colors.grey.withOpacity(0.15),
                   blurRadius: _isPressed ? 8 : 12,
                   offset: _isPressed ? const Offset(0, 2) : const Offset(0, 4),
@@ -100,26 +89,41 @@ class _FactureCardState extends State<FactureCard>
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
+                onTap: () => _navigateToDetails(context),
                 onTapDown: _onTapDown,
                 onTapUp: _onTapUp,
                 onTapCancel: _onTapCancel,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(colorScheme, isPayee, isEnRetard),
-                      const SizedBox(height: 12),
-                      _buildInvoiceType(theme, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildDivider(colorScheme),
-                      const SizedBox(height: 20),
-                      _buildDetailsGrid(theme, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildDateInfo(theme, colorScheme),
-                      const SizedBox(height: 24),
-                      _buildActionButtons(theme, colorScheme, isPayee, isEnRetard),
-                    ],
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? colorScheme.surface
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDarkMode
+                          ? colorScheme.outline.withOpacity(0.3)
+                          : colorScheme.outline.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(theme, colorScheme, isDarkMode),
+                        const SizedBox(height: 16),
+                        _buildReference(theme, colorScheme),
+                        const SizedBox(height: 20),
+                        _buildDivider(colorScheme),
+                        const SizedBox(height: 20),
+                        _buildDetailsGrid(theme, colorScheme, isDarkMode),
+                        const SizedBox(height: 16),
+                        _buildDateInfo(theme, colorScheme),
+                        const SizedBox(height: 24),
+                        _buildActionButton(theme, colorScheme),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -130,242 +134,331 @@ class _FactureCardState extends State<FactureCard>
     );
   }
 
-  Widget _buildHeader(ColorScheme colorScheme, bool isPayee, bool isEnRetard) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Facture reference - made more prominent
-        Text(
-          'Facture ${widget.facture.cireference}',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 8),
+  Widget _buildHeader(ThemeData theme, ColorScheme colorScheme, bool isDarkMode) {
+    final isPayee = widget.facture.cistatus == 'VALID';
+    final isEnRetard = widget.facture.cistatus == 'INPROG' &&
+        widget.facture.cidocdate.isBefore(DateTime.now());
 
-        // Status and type in a row with consistent spacing
-        Row(
-          children: [
-            // Status badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isPayee
-                    ? Colors.green.shade100
-                    : isEnRetard
-                    ? Colors.red.shade100
-                    : Colors.orange.shade100,
-                borderRadius: BorderRadius.circular(20),
+    return Row(
+      children: [
+        Hero(
+          tag: 'facture-icon-${widget.facture.cireference}',
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.primary.withOpacity(0.1),
+                  colorScheme.primary.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Text(
-                widget.facture.cistatuslabel.toUpperCase(),
-                style: TextStyle(
-                  color: isPayee
-                      ? Colors.green.shade800
-                      : isEnRetard
-                      ? Colors.red.shade800
-                      : Colors.orange.shade800,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(0.2),
+                width: 1,
               ),
             ),
-            const SizedBox(width: 8),
-
-            // Invoice type
-            Expanded(
-              child: Text(
+            child: Icon(
+              _getInvoiceIcon(widget.facture.citype),
+              size: 24,
+              color: colorScheme.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
                 widget.facture.citypelabel,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurface.withOpacity(0.8),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  height: 1.2,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              if (widget.facture.clientname != null)
+                Text(
+                  widget.facture.clientname!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
         ),
+        const SizedBox(width: 12),
+        _buildStatusChip(colorScheme, isPayee, isEnRetard),
       ],
     );
   }
 
-  Widget _buildInvoiceType(ThemeData theme, ColorScheme colorScheme) {
-    return Row(
-      children: [
-        Icon(
-          _getInvoiceIcon(widget.facture.citype),
-          size: 20,
-          color: colorScheme.primary,
+  Widget _buildStatusChip(ColorScheme colorScheme, bool isPayee, bool isEnRetard) {
+    Color statusColor;
+    String statusLabel;
+
+    if (isPayee) {
+      statusColor = Colors.green;
+      statusLabel = 'Validée';
+    } else if (isEnRetard) {
+      statusColor = Colors.red;
+      statusLabel = 'En retard';
+    } else {
+      statusColor = Colors.orange;
+      statusLabel = 'En cours';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: statusColor.withOpacity(0.3),
+          width: 1,
         ),
-        const SizedBox(width: 8),
-        Text(
-          widget.facture.citypelabel,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurface.withOpacity(0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: statusColor,
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 6),
+          Text(
+            statusLabel,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: statusColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReference(ThemeData theme, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.tag_rounded,
+            size: 16,
+            color: colorScheme.onSurface.withOpacity(0.7),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Référence: ${widget.facture.cireference}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildDivider(ColorScheme colorScheme) {
-    return Divider(
+    return Container(
       height: 1,
-      color: colorScheme.outline.withOpacity(0.1),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            colorScheme.outline.withOpacity(0.3),
+            Colors.transparent,
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildDetailsGrid(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildDetailsGrid(ThemeData theme, ColorScheme colorScheme, bool isDarkMode) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildDetailItem(
-          'Montant total',
-          '${widget.facture.cigrosstotal.toStringAsFixed(2)} ${widget.facture.currcode ?? '€'}',
-          theme,
-          colorScheme,
+        Expanded(
+          child: _buildDetailItem(
+            title: 'Montant total',
+            value: '${widget.facture.cigrosstotal.toStringAsFixed(2)} ${widget.facture.currcode ?? '€'}',
+            icon: Icons.payments_rounded,
+            theme: theme,
+            colorScheme: colorScheme,
+          ),
         ),
-        _buildDetailItem(
-          'Montant dû',
-          '${widget.facture.cidueamount.toStringAsFixed(2)} ${widget.facture.currcode ?? '€'}',
-          theme,
-          colorScheme,
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildDetailItem(
+            title: 'Montant dû',
+            value: '${widget.facture.cidueamount.toStringAsFixed(2)} ${widget.facture.currcode ?? '€'}',
+            icon: Icons.account_balance_wallet_rounded,
+            theme: theme,
+            colorScheme: colorScheme,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildDetailItem(
-      String label, String value, ThemeData theme, ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurface.withOpacity(0.6),
-          ),
+  Widget _buildDetailItem({
+    required String title,
+    required String value,
+    required IconData icon,
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.2),
+          width: 1,
         ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: colorScheme.onSurface.withOpacity(0.6),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: colorScheme.onSurface,
+              height: 1.2,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildDateInfo(ThemeData theme, ColorScheme colorScheme) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildDateItem(
-          'Date de création',
-          _formatDate(widget.facture.cidocdate),
-          theme,
-          colorScheme,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.2),
+          width: 1,
         ),
-        if (widget.facture.ciinvoicetype == 'INVOICE')
-          _buildDateItem(
-            'Référence client',
-            widget.facture.clientname ?? 'N/A',
-            theme,
-            colorScheme,
-          ),
-      ],
-    );
-  }
-
-  Widget _buildDateItem(
-      String label, String value, ThemeData theme, ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.calendar_today_rounded,
+            size: 16,
             color: colorScheme.onSurface.withOpacity(0.6),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurface,
+          const SizedBox(width: 8),
+          Text(
+            'Date de création: ${_formatDate(widget.facture.cidocdate)}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildActionButtons(
-      ThemeData theme, ColorScheme colorScheme, bool isPayee, bool isEnRetard) {
-    return Column(
-      children: [
-        // Primary action buttons row
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          FactureDetailsPage(facture: widget.facture),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.visibility_rounded, size: 18),
-                label: const Text('Voir'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  side: BorderSide(
-                    color: colorScheme.outline.withOpacity(0.5),
-                    width: 1,
-                  ),
-                  foregroundColor: colorScheme.onSurface,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton.tonalIcon(
-                onPressed: widget.onDownloadPressed,
-                icon: const Icon(Icons.download_rounded, size: 18),
-                label: const Text('Télécharger'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  backgroundColor: colorScheme.surfaceVariant,
-                  foregroundColor: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        // Conditional payment action button
-        if (!isPayee) ...[
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
+  Widget _buildActionButton(ThemeData theme, ColorScheme colorScheme) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.tonalIcon(
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ],
+          backgroundColor: colorScheme.primary.withOpacity(0.1),
+          foregroundColor: colorScheme.primary,
+        ),
+        onPressed: () => _navigateToDetails(context),
+        icon: const Icon(
+          Icons.visibility_rounded,
+          size: 20,
+        ),
+        label: Text(
+          'Voir les détails',
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            FactureDetailsPage(facture: widget.facture),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+          var tween = Tween(begin: begin, end: end).chain(
+            CurveTween(curve: curve),
+          );
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
     );
   }
 
@@ -376,6 +469,7 @@ class _FactureCardState extends State<FactureCard>
       case 'PREFIN':
         return Icons.trending_up_rounded;
       case 'RENT':
+      case 'RV':
         return Icons.home_rounded;
       default:
         return Icons.receipt_rounded;
@@ -387,7 +481,6 @@ class _FactureCardState extends State<FactureCard>
       'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
       'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
     ];
-
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }

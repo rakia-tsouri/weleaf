@@ -11,7 +11,6 @@ class FactureDetailsPage extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
-
     final isPayee = facture.cistatus == 'VALID';
     final isEnRetard = facture.cistatus == 'INPROG' &&
         facture.cidocdate.isBefore(DateTime.now());
@@ -19,16 +18,6 @@ class FactureDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Détails de la facture'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.share),
-            onPressed: () => _shareFacture(context),
-          ),
-          IconButton(
-            icon: Icon(Icons.print),
-            onPressed: () => _printFacture(context),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -38,17 +27,14 @@ class FactureDetailsPage extends StatelessWidget {
             // En-tête avec statut
             _buildHeaderSection(context, isPayee, isEnRetard),
             const SizedBox(height: 24),
-
             // Informations principales
             _buildMainInfoSection(context),
             const SizedBox(height: 24),
-
             // Détails financiers
             _buildFinancialSection(context),
-            const SizedBox(height: 24),
-
-            // Actions
-            _buildActionButtons(context, isPayee, isEnRetard),
+            const SizedBox(height: 32),
+            // Action button centered
+            _buildActionButton(context),
           ],
         ),
       ),
@@ -140,11 +126,11 @@ class FactureDetailsPage extends StatelessWidget {
 
     if (isPayee) {
       statusColor = Colors.green;
-      statusText = 'Payée';
+      statusText = 'Validée';
       statusIcon = Icons.check_circle_rounded;
     } else if (isEnRetard) {
       statusColor = Colors.red;
-      statusText = 'En retard';
+      statusText = 'Paiement en cours';
       statusIcon = Icons.warning_rounded;
     } else {
       statusColor = Colors.orange;
@@ -245,8 +231,7 @@ class FactureDetailsPage extends StatelessWidget {
   Widget _buildFinancialSection(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isPayee = facture.cistatus == 'VALID'; // Add this line
-
+    final isPayee = facture.cistatus == 'VALID';
 
     return Card(
       elevation: 0,
@@ -402,70 +387,27 @@ class FactureDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, bool isPayee, bool isEnRetard) {
+  Widget _buildActionButton(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: () => _downloadFacture(context),
-                icon: const Icon(Icons.download),
-                label: const Text('Télécharger'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+    return Center(
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: () => _downloadFacture(context),
+          icon: const Icon(Icons.download_rounded, size: 20),
+          label: const Text('Télécharger'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: FilledButton.tonalIcon(
-                onPressed: () => _shareFacture(context),
-                icon: const Icon(Icons.share),
-                label: const Text('Partager'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  backgroundColor: colorScheme.surfaceVariant,
-                  foregroundColor: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (!isPayee)
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => _payFacture(context),
-              icon: Icon(
-                isEnRetard ? Icons.payment : Icons.schedule,
-                size: 20,
-              ),
-              label: Text(
-                isEnRetard ? 'Payer maintenant' : 'Programmer le paiement',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                backgroundColor: isEnRetard ? Colors.red : Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-            ),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
           ),
-      ],
+        ),
+      ),
     );
   }
 
@@ -487,7 +429,6 @@ class FactureDetailsPage extends StatelessWidget {
       'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
       'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
     ];
-
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
@@ -495,27 +436,6 @@ class FactureDetailsPage extends StatelessWidget {
     // Implémentation du téléchargement
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Téléchargement de la facture...')),
-    );
-  }
-
-  void _shareFacture(BuildContext context) {
-    // Implémentation du partage
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Partage de la facture...')),
-    );
-  }
-
-  void _printFacture(BuildContext context) {
-    // Implémentation de l'impression
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Impression de la facture...')),
-    );
-  }
-
-  void _payFacture(BuildContext context) {
-    // Implémentation du paiement
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Redirection vers le paiement...')),
     );
   }
 }

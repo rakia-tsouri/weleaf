@@ -50,7 +50,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
           : const Color(0xFFF8FAFD),
       appBar: AppBar(
         title: Text(
-          'Contract #${widget.contract.ctrid}',
+          'Contrat ${widget.contract.ctdescription}',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 20,
@@ -86,19 +86,19 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
       ),
       body: Column(
         children: [
-          // Enhanced Status Header
+          // En-tête de statut amélioré
           _buildStatusHeader(context),
-          // Main Content
+          // Contenu principal
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               child: Column(
                 children: [
-                  // Enhanced Summary Cards
+                  // Cartes de résumé améliorées
                   _buildSummaryCardsGrid(context),
                   const SizedBox(height: 24),
-                  // Enhanced Main Details Card
+                  // Carte de détails principaux améliorée
                   _buildMainDetailsCard(context),
                 ],
               ),
@@ -185,7 +185,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Contract Status',
+                  'Statut du contrat',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -214,7 +214,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Ends ${widget.contract.cteenddate}',
+                'Termine le ${widget.contract.cteenddate}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -235,8 +235,8 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
             Expanded(
               child: _buildSummaryCard(
                 context,
-                title: 'Monthly Payment',
-                value: '${widget.contract.cterentalamount.toStringAsFixed(2)} ${widget.contract.currcode}',
+                title: 'Paiement mensuel',
+                value: _formatAmount(widget.contract.cterentalamount, widget.contract.currcode),
                 icon: Icons.payments_rounded,
                 gradient: LinearGradient(
                   colors: [Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.05)],
@@ -248,8 +248,8 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
             Expanded(
               child: _buildSummaryCard(
                 context,
-                title: 'Financed Amount',
-                value: '${widget.contract.ctfinancedamount.toStringAsFixed(2)} ${widget.contract.currcode}',
+                title: 'Montant financé',
+                value: _formatAmount(widget.contract.ctfinancedamount, widget.contract.currcode),
                 icon: Icons.account_balance_wallet_rounded,
                 gradient: LinearGradient(
                   colors: [Color(0xFFAFAD4C).withOpacity(0.1), Color(0xFFAFAD4C).withOpacity(0.05)],
@@ -265,8 +265,8 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
             Expanded(
               child: _buildSummaryCard(
                 context,
-                title: 'Duration',
-                value: '${widget.contract.cteduration} months',
+                title: 'Durée',
+                value: '${widget.contract.cteduration} mois',
                 icon: Icons.schedule_rounded,
                 gradient: LinearGradient(
                   colors: [Colors.orange.withOpacity(0.1), Colors.orange.withOpacity(0.05)],
@@ -278,7 +278,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
             Expanded(
               child: _buildSummaryCard(
                 context,
-                title: 'Rate',
+                title: 'Taux',
                 value: '${widget.contract.ctenominalrate.toStringAsFixed(2)}%',
                 icon: Icons.trending_up_rounded,
                 gradient: LinearGradient(
@@ -346,18 +346,18 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 12, // Reduced from 13 to 12
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: colorScheme.onSurface.withOpacity(0.7),
-                    height: 1.2, // Added line height for better spacing
+                    height: 1.2,
                   ),
-                  maxLines: 2, // Allow text to wrap to 2 lines
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10), // Reduced from 12 to 10 to balance the space
+          const SizedBox(height: 10),
           Text(
             value,
             style: TextStyle(
@@ -403,41 +403,41 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Contract Details Section
+            // Section Détails du contrat
             _buildCleanSection(
-              title: 'Contract Details',
+              title: 'Détails du contrat',
               icon: Icons.description_rounded,
               children: [
-                _buildDetailItem('Reference', widget.contract.ctreference),
+                _buildDetailItem('Référence', widget.contract.ctreference),
                 _buildDetailItem('Description', widget.contract.ctdescription),
-                _buildDetailItem('Offer', widget.contract.offeridlabel),
+                _buildDetailItem('Offre', widget.contract.offeridlabel),
               ],
             ),
             _buildSectionDivider(),
 
-            // Client Information Section
+            // Section Informations client
             _buildCleanSection(
-              title: 'Client Information',
+              title: 'Informations client',
               icon: Icons.business_rounded,
               children: [
-                _buildDetailItem('Client Name', widget.contract.clientname),
-                _buildDetailItem('Client Reference', widget.contract.clientreference),
+                _buildDetailItem('Nom du client', widget.contract.clientname),
+                _buildDetailItem('Référence client', widget.contract.clientreference),
               ],
             ),
             _buildSectionDivider(),
 
-            // Contract Period Section
+            // Section Période du contrat
             _buildCleanSection(
-              title: 'Contract Period',
+              title: 'Période du contrat',
               icon: Icons.date_range_rounded,
               children: [
-                _buildDetailItem('Start Date', widget.contract.ctestartdate),
-                _buildDetailItem('End Date', widget.contract.cteenddate),
-                _buildDetailItem('Duration', '${widget.contract.cteduration} months'),
+                _buildDetailItem('Date de début', widget.contract.ctestartdate),
+                _buildDetailItem('Date de fin', widget.contract.cteenddate),
+                _buildDetailItem('Durée', '${widget.contract.cteduration} mois'),
               ],
             ),
 
-            // Expandable sections
+            // Sections extensibles
             if (_showAllDetails) ...[
               FadeTransition(
                 opacity: _fadeAnimation,
@@ -445,26 +445,26 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
                   children: [
                     _buildSectionDivider(),
                     _buildCleanSection(
-                      title: 'Financial Terms',
+                      title: 'Conditions financières',
                       icon: Icons.attach_money_rounded,
                       children: [
-                        _buildMonetaryItem('Monthly Payment', widget.contract.cterentalamount, widget.contract.currcode),
-                        _buildMonetaryItem('Financed Amount', widget.contract.ctfinancedamount, widget.contract.currcode),
-                        _buildMonetaryItem('Residual Value', widget.contract.ctervamount, widget.contract.currcode),
-                        _buildDetailItem('Nominal Rate', '${widget.contract.ctenominalrate.toStringAsFixed(2)}%'),
+                        _buildMonetaryItem('Paiement mensuel', widget.contract.cterentalamount, widget.contract.currcode),
+                        _buildMonetaryItem('Montant financé', widget.contract.ctfinancedamount, widget.contract.currcode),
+                        _buildMonetaryItem('Valeur résiduelle', widget.contract.ctervamount, widget.contract.currcode),
+                        _buildDetailItem('Taux nominal', '${widget.contract.ctenominalrate.toStringAsFixed(2)}%'),
                       ],
                     ),
                     _buildSectionDivider(),
                     _buildCleanSection(
-                      title: 'Additional Information',
+                      title: 'Informations supplémentaires',
                       icon: Icons.info_rounded,
                       children: [
                         if (widget.contract.ctactivationdate != null)
                           _buildDetailItem(
-                              'Activation Date',
+                              'Date d\'activation',
                               '${widget.contract.ctactivationdate!.day}/${widget.contract.ctactivationdate!.month}/${widget.contract.ctactivationdate!.year}'
                           ),
-                        _buildDetailItem('Proposal Reference', widget.contract.propreference),
+                        _buildDetailItem('Référence de proposition', widget.contract.propreference),
                       ],
                     ),
                   ],
@@ -473,7 +473,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
             ],
 
             const SizedBox(height: 20),
-            // Enhanced Show More/Less Button
+            // Bouton Afficher plus/moins amélioré
             Center(
               child: Container(
                 decoration: BoxDecoration(
@@ -503,7 +503,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _showAllDetails ? 'Show Less' : 'Show All Details',
+                            _showAllDetails ? 'Afficher moins' : 'Afficher tous les détails',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: colorScheme.primary,
@@ -617,7 +617,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
           Expanded(
             flex: 6,
             child: Text(
-              value.isNotEmpty ? value : 'Not specified',
+              value.isNotEmpty ? value : 'Non spécifié',
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -633,6 +633,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
 
   Widget _buildMonetaryItem(String label, double amount, String currency) {
     final colorScheme = Theme.of(context).colorScheme;
+    final formattedValue = _formatAmount(amount, currency);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -653,33 +654,31 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
           ),
           Expanded(
             flex: 6,
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: amount.toStringAsFixed(2),
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                      height: 1.4,
-                    ),
-                  ),
-                  TextSpan(
-                    text: ' $currency',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: colorScheme.onSurface.withOpacity(0.7),
-                      height: 1.4,
-                    ),
-                  ),
-                ],
+            child: Text(
+              formattedValue,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+                height: 1.4,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _formatAmount(double amount, String currency) {
+    // Gérer le symbole € pour EUR
+    final symbol = currency == 'EUR' ? ' €' : ' $currency';
+
+    // Formater le nombre
+    final formatted = amount.toStringAsFixed(2);
+
+    // Supprimer les .00 si nécessaire
+    return formatted.endsWith('.00')
+        ? '${formatted.replaceAll('.00', '')}$symbol'
+        : '$formatted$symbol';
   }
 }
