@@ -81,9 +81,10 @@ class FactureRepository {
       throw Exception('Token d\'authentification manquant');
     }
 
-    final downloadUrl = '$baseUrl/download/$printId';
+    // URL CORRIGÉE - Utilisez le bon endpoint
+    final downloadUrl = 'https://demo-backend-utina.teamwill-digital.com/printing-service/api/print/download?printid=$printId';
 
-    print('Téléchargement PDF depuis: $downloadUrl'); // Debug log
+    print('Téléchargement PDF depuis: $downloadUrl');
 
     final response = await http.get(
       Uri.parse(downloadUrl),
@@ -93,14 +94,33 @@ class FactureRepository {
       },
     );
 
-    print('Réponse téléchargement: ${response.statusCode}'); // Debug log
+    print('Réponse téléchargement: ${response.statusCode}');
+    print('Taille du contenu: ${response.bodyBytes.length} bytes');
 
     if (response.statusCode == 200) {
+      if (response.bodyBytes.isEmpty) {
+        throw Exception('Le fichier PDF est vide');
+      }
       return response.bodyBytes;
     } else {
-      final errorData = json.decode(utf8.decode(response.bodyBytes));
-      final errorMsg = errorData['message'] ?? 'Erreur lors du téléchargement';
+      // Essayez de lire le message d'erreur en texte brut d'abord
+      String errorMsg;
+      try {
+        errorMsg = utf8.decode(response.bodyBytes);
+      } catch (e) {
+        errorMsg = 'Erreur lors du décodage de la réponse';
+      }
+
+      // Si c'est du JSON, essayez de le parser
+      try {
+        final errorData = json.decode(errorMsg);
+        errorMsg = errorData['message'] ?? errorMsg;
+      } catch (e) {
+        // Ce n'est pas du JSON, on garde le message texte
+      }
+
       throw Exception('$errorMsg (${response.statusCode})');
     }
   }
+
 }
