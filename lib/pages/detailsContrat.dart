@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/data/models/contract.dart';
+import 'dart:convert';
+
+String cleanText(String? input) {
+  if (input == null) return '';
+  return const Utf8Decoder().convert(input.codeUnits);
+}
+
 
 class ContractDetailsPage extends StatefulWidget {
   final Contract contract;
@@ -50,7 +57,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
           : const Color(0xFFF8FAFD),
       appBar: AppBar(
         title: Text(
-          'Contrat ${widget.contract.ctdescription}',
+          'Contrat ${cleanText(widget.contract.ctdescription)}',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 20,
@@ -116,16 +123,13 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
 
     Color statusColor;
     IconData statusIcon;
-    String statusText = widget.contract.statuslabel;
+    String statusText = widget.contract.ctstatus;
 
     switch (statusText.toLowerCase()) {
       case 'active':
+        statusText = 'Actif';
         statusColor = Colors.green.shade600;
         statusIcon = Icons.check_circle_rounded;
-        break;
-      case 'expiré':
-        statusColor = Colors.amber.shade600;
-        statusIcon = Icons.schedule_rounded;
         break;
       default:
         statusColor = colorScheme.primary;
@@ -409,7 +413,7 @@ class _ContractDetailsPageState extends State<ContractDetailsPage>
               icon: Icons.description_rounded,
               children: [
                 _buildDetailItem('Référence', widget.contract.ctreference),
-                _buildDetailItem('Description', widget.contract.ctdescription),
+                _buildDetailItem('Description', cleanText(widget.contract.ctdescription)),
                 _buildDetailItem('Offre', widget.contract.offeridlabel),
               ],
             ),

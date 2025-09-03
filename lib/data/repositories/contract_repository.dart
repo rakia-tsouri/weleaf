@@ -21,7 +21,7 @@ class ContractRepository {
         'ctstatus': 'ACTIVE', // Filtre clé pour les contrats actifs
         'brokername': '',
         'clientname': '', // Ajout filtre par nom client
-        'clientreference': '',
+        'clientreference': '00857',
         'ctphase': '',
         'ctreference': '',
         'ctrid': '',

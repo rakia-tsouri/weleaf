@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/data/models/contract.dart';
 import 'package:optorg_mobile/pages/detailsContrat.dart';
+import 'dart:convert';
+
+String cleanText(String input) {
+  return const Utf8Decoder().convert(input.codeUnits);
+}
+
 
 class ContractCard extends StatefulWidget {
   final Contract contract;
@@ -165,7 +171,7 @@ class _ContractCardState extends State<ContractCard>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.contract.ctdescription,
+                cleanText(widget.contract.ctdescription ?? ''),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                   fontSize: 18,
@@ -173,14 +179,6 @@ class _ContractCardState extends State<ContractCard>
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Contrat véhicule',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
-                  fontSize: 12,
-                ),
               ),
             ],
           ),

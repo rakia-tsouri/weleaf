@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:optorg_mobile/data/models/facture_model.dart';
 import 'package:optorg_mobile/utils/app_data_store.dart';
+import 'dart:typed_data'; // Ajoutez cette ligne
 
 class FactureRepository {
   final AppDataStore _appDataStore = AppDataStore();
@@ -27,7 +28,7 @@ class FactureRepository {
         'datemax': '',
         'datemin': '',
         'paystatus': '',
-        'tpreference': '',
+        'tpreference': '00857',
       },
     );
 
@@ -66,10 +67,40 @@ class FactureRepository {
   }
 
   List<Facture> filterFacturesPayees(List<Facture> factures) {
-    return factures.where((f) => f.cistatus == 'VALID').toList();
+    return factures.where((f) => f.cistatus == 'PAID').toList();
   }
 
   List<Facture> filterFacturesImpayees(List<Facture> factures) {
-    return factures.where((f) => f.cistatus == 'INPROG').toList();
+    return factures.where((f) => f.cistatus != 'PAID').toList();
+  }
+
+  // Dans votre FactureRepository
+  Future<Uint8List> downloadFacturePdf(int printId) async {
+    final token = await _appDataStore.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Token d\'authentification manquant');
+    }
+
+    final downloadUrl = '$baseUrl/download/$printId';
+
+    print('Téléchargement PDF depuis: $downloadUrl'); // Debug log
+
+    final response = await http.get(
+      Uri.parse(downloadUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/pdf',
+      },
+    );
+
+    print('Réponse téléchargement: ${response.statusCode}'); // Debug log
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      final errorData = json.decode(utf8.decode(response.bodyBytes));
+      final errorMsg = errorData['message'] ?? 'Erreur lors du téléchargement';
+      throw Exception('$errorMsg (${response.statusCode})');
+    }
   }
 }

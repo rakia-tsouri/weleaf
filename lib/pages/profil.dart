@@ -92,8 +92,42 @@ class _ProfilePageState extends State<ProfilePage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(PRIMARY_SKY_BLUE_COLOR),
+                  ),
+                  SizedBox(height: 16),
+                  SizedBox(height: 16),
+                  Text(
+                    'Sauvegarde en cours...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       );
 
@@ -104,18 +138,26 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profil sauvegardé avec succès!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: const Text('Profil sauvegardé avec succès!'),
+              backgroundColor: Colors.green[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              duration: const Duration(seconds: 2),
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Erreur lors de la sauvegarde'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: const Text('Erreur lors de la sauvegarde'),
+              backgroundColor: Colors.red[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -124,7 +166,11 @@ class _ProfilePageState extends State<ProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -138,12 +184,12 @@ class _ProfilePageState extends State<ProfilePage> {
     final isSmallScreen = screenWidth < 600;
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? _buildLoadingWidget()
               : _errorMessage != null
               ? _buildErrorWidget()
               : Form(
@@ -162,18 +208,21 @@ class _ProfilePageState extends State<ProfilePage> {
                         // Champ Name
                         _buildTextField(
                           'Nom Complet',
+                          Icons.person_outline,
                           _nameController,
                         ),
                         const SizedBox(height: 20),
                         // Champ User Name
                         _buildTextField(
                           'Nom Utilisateur',
+                          Icons.alternate_email,
                           _userNameController,
                         ),
                         const SizedBox(height: 20),
                         // Champ Phone
                         _buildTextField(
                           'Téléphone',
+                          Icons.phone_outlined,
                           _phoneController,
                           keyboardType: TextInputType.phone,
                         ),
@@ -181,29 +230,40 @@ class _ProfilePageState extends State<ProfilePage> {
                         // Champ Mobile
                         _buildTextField(
                           'Mobile',
+                          Icons.phone_iphone_outlined,
                           _mobileController,
-                          hintText: 'Mobile',
                           keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 40),
                         // Bouton Save sous les champs
                         SizedBox(
-                          width: 200,
-                          child: ElevatedButton.icon(
+                          width: isSmallScreen ? double.infinity : 200,
+                          child: ElevatedButton(
                             onPressed: _saveProfile,
-                            icon: const Icon(Icons.save, size: 18),
-                            label: const Text('Sauvegarder'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: PRIMARY_SKY_BLUE_COLOR,
                               foregroundColor: Colors.white,
-                              textStyle: const TextStyle(fontSize: 18),
+                              textStyle: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 24,
                                 vertical: 16,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(12),
                               ),
+                              elevation: 2,
+                              shadowColor: PRIMARY_SKY_BLUE_COLOR.withOpacity(0.3),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.save, size: 20),
+                                const SizedBox(width: 8),
+                                const Text('Sauvegarder'),
+                              ],
                             ),
                           ),
                         ),
@@ -219,33 +279,27 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildErrorWidget() {
+  Widget _buildLoadingWidget() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red[400],
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: CircularProgressIndicator(
+              strokeWidth: 4,
+              valueColor: AlwaysStoppedAnimation<Color>(PRIMARY_SKY_BLUE_COLOR),
+              backgroundColor: PRIMARY_SKY_BLUE_COLOR.withOpacity(0.2),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
-            _errorMessage!,
+            'Chargement du profil...',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.red[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _loadUserProfile,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Réessayer'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PRIMARY_SKY_BLUE_COLOR,
-              foregroundColor: Colors.white,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -253,178 +307,215 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Colors.red[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Oups !',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.red[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage!,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadUserProfile,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Réessayer'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: PRIMARY_SKY_BLUE_COLOR,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader(bool isSmallScreen) {
-    if (isSmallScreen) {
-      return Column(
-        children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.arrow_back),
-                iconSize: 24,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Compte',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: PRIMARY_SKY_BLUE_COLOR,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person,
-                  size: 50,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _user?.data?.surname ?? appName,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _user?.data?.email ?? 'Email non disponible',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[700],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ],
-      );
-    } else {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back),
-            iconSize: 24,
-          ),
-          Expanded(
-            child: Center(
-              child: Column(
-                children: [
-                  const Text(
-                    'Compte',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: PRIMARY_SKY_BLUE_COLOR,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      size: 60,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _user?.data?.surname ?? appName,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _user?.data?.email ?? 'Email non disponible',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    spreadRadius: 1,
                   ),
                 ],
               ),
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+                iconSize: 24,
+                color: Colors.grey[700],
+              ),
             ),
-          ),
-          const SizedBox(width: 40),
-        ],
-      );
-    }
+            const SizedBox(width: 16),
+            Text(
+              'Mon Compte',
+              style: TextStyle(
+                fontSize: isSmallScreen ? 22 : 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Column(
+          children: [
+            Container(
+              width: isSmallScreen ? 100 : 120,
+              height: isSmallScreen ? 100 : 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    PRIMARY_SKY_BLUE_COLOR,
+                    PRIMARY_SKY_BLUE_COLOR.withOpacity(0.7),
+                  ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: PRIMARY_SKY_BLUE_COLOR.withOpacity(0.3),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.person_rounded,
+                size: isSmallScreen ? 50 : 60,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _user?.data?.surname ?? appName,
+              style: TextStyle(
+                fontSize: isSmallScreen ? 20 : 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _user?.data?.email ?? 'Email non disponible',
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _buildTextField(
       String label,
+      IconData icon,
       TextEditingController controller, {
         String? hintText,
         TextInputType? keyboardType,
       }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        readOnly: false,
+        style: TextStyle(
+          color: Colors.grey[800],
+          fontSize: 16,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+            color: Colors.grey[600],
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
           ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          readOnly: false, // Made editable for profile updates
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(color: Colors.grey[400]),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: Color(0xFF3F51B5)),
-            ),
-            filled: true,
-            fillColor: Colors.grey[50],
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
+          prefixIcon: Icon(
+            icon,
+            color: PRIMARY_SKY_BLUE_COLOR,
+            size: 22,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: PRIMARY_SKY_BLUE_COLOR,
+              width: 2,
             ),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return Empty_Input_Error;
-            }
-            return null;
-          },
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.grey[400]),
         ),
-      ],
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return Empty_Input_Error;
+          }
+          return null;
+        },
+      ),
     );
   }
 }

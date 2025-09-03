@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/data/models/facture_model.dart';
+import 'package:optorg_mobile/data/repositories/facture_repository.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:typed_data'; // Ajoutez cette ligne
+
 
 class FactureDetailsPage extends StatelessWidget {
   final Facture facture;
+  final FactureRepository factureRepository; // Ajoutez le repository
 
-  const FactureDetailsPage({super.key, required this.facture});
+  const FactureDetailsPage({
+    super.key,
+    required this.facture,
+    required this.factureRepository, // Ajoutez le paramètre
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
-    final isPayee = facture.cistatus == 'VALID';
+    final isPayee = facture.cistatus == 'PAID';
     final isEnRetard = facture.cistatus == 'INPROG' &&
         facture.cidocdate.isBefore(DateTime.now());
 
@@ -126,11 +138,11 @@ class FactureDetailsPage extends StatelessWidget {
 
     if (isPayee) {
       statusColor = Colors.green;
-      statusText = 'Validée';
+      statusText = 'Payée';
       statusIcon = Icons.check_circle_rounded;
     } else if (isEnRetard) {
       statusColor = Colors.red;
-      statusText = 'Paiement en cours';
+      statusText = 'En cours';
       statusIcon = Icons.warning_rounded;
     } else {
       statusColor = Colors.orange;
@@ -432,10 +444,64 @@ class FactureDetailsPage extends StatelessWidget {
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
-  void _downloadFacture(BuildContext context) {
-    // Implémentation du téléchargement
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Téléchargement de la facture...')),
-    );
+  void _downloadFacture(BuildContext context) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      // Afficher un indicateur de chargement
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Téléchargement de la facture...')),
+      );
+
+      // Vérifier si printid est disponible (notez le 'i' minuscule)
+      if (facture.printid == null) {
+        throw Exception('ID d\'impression non disponible pour cette facture');
+      }
+
+      // Télécharger le PDF
+      final pdfBytes = await factureRepository.downloadFacturePdf(facture.printid!);
+
+      // Sauvegarder et ouvrir le fichier
+      await _saveAndOpenPdf(context, pdfBytes, facture.cidocreference);
+
+      scaffoldMessenger.hideCurrentSnackBar();
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Facture téléchargée avec succès')),
+      );
+
+    } catch (e) {
+      scaffoldMessenger.hideCurrentSnackBar();
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Erreur lors du téléchargement: $e')),
+      );
+    }
+  }
+
+  Future<void> _saveAndOpenPdf(BuildContext context, Uint8List pdfBytes, String fileName) async {
+    try {
+      // Obtenir le répertoire de téléchargement
+      final directory = await getDownloadsDirectory();
+      if (directory == null) {
+        throw Exception('Impossible d\'accéder au répertoire de téléchargement');
+      }
+
+      // Créer le fichier
+      final file = File('${directory.path}/$fileName.pdf');
+
+      // Écrire les données
+      await file.writeAsBytes(pdfBytes);
+
+      // Ouvrir le fichier
+      final result = await OpenFile.open(file.path);
+
+      if (result.type != ResultType.done) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fichier sauvegardé: ${file.path}')),
+        );
+      }
+
+    } catch (e) {
+      throw Exception('Erreur lors de la sauvegarde du fichier: $e');
+    }
   }
 }

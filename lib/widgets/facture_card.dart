@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:optorg_mobile/data/models/facture_model.dart';
 import 'package:optorg_mobile/pages/FactureDetailsPage.dart';
+import 'package:optorg_mobile/data/repositories/facture_repository.dart';
 
 class FactureCard extends StatefulWidget {
   final Facture facture;
@@ -135,7 +136,7 @@ class _FactureCardState extends State<FactureCard>
   }
 
   Widget _buildHeader(ThemeData theme, ColorScheme colorScheme, bool isDarkMode) {
-    final isPayee = widget.facture.cistatus == 'VALID';
+    final isPayee = widget.facture.cistatus == 'PAID';
     final isEnRetard = widget.facture.cistatus == 'INPROG' &&
         widget.facture.cidocdate.isBefore(DateTime.now());
 
@@ -208,13 +209,13 @@ class _FactureCardState extends State<FactureCard>
 
     if (isPayee) {
       statusColor = Colors.green;
-      statusLabel = 'Validée';
+      statusLabel = 'Payée';
     } else if (isEnRetard) {
       statusColor = Colors.red;
-      statusLabel = 'En retard';
+      statusLabel = 'En cours';
     } else {
       statusColor = Colors.orange;
-      statusLabel = 'En cours';
+      statusLabel = 'En attente';
     }
 
     return Container(
@@ -444,7 +445,10 @@ class _FactureCardState extends State<FactureCard>
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            FactureDetailsPage(facture: widget.facture),
+            FactureDetailsPage(
+              facture: widget.facture,
+              factureRepository: FactureRepository(), // Ajoutez cette ligne
+            ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
